@@ -17,7 +17,7 @@ struct FleyPlannerApp: App {
                 .environment(appState)
                 .preferredColorScheme(.light)
                 .task {
-                    await appState.signIn(userId: MockData.shared.edgar.id)
+                    await appState.initializeSession()
                 }
         }
     }

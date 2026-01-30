@@ -8,12 +8,19 @@
 import Foundation
 
 // Cuando empecemos a mutar cosas hay que usar `actor`
+// @deprecated
 final class MockDataService: DataService {
     static let shared = MockDataService()
     
     private let mockData = MockData.shared
     
-    func getUser(id: UUID) async -> User {
+    func signInWithApple(idToken: String, nonce: String? = nil) async throws -> UUID {
+        return mockData.edgar.id
+    }
+
+    func saveUser(_ user: User) async throws {}
+    
+    func getUser(id: UUID) async -> User? {
         // Simulate network delay
         try? await Task.sleep(nanoseconds: 500_000_000) // 0.5s
         
@@ -25,8 +32,13 @@ final class MockDataService: DataService {
         return user
     }
     
-    func getAllUsers() async -> [User] {
-        try? await Task.sleep(nanoseconds: 300_000_000)
+    func getFamily(for userId: UUID) async -> Family? {
+        try? await Task.sleep(nanoseconds: 400_000_000)
+        return mockData.family
+    }
+    
+    func getFamilyMembers(familyId: UUID) async -> [User] {
+        try? await Task.sleep(nanoseconds: 200_000_000)
         return mockData.allUsers
     }
     

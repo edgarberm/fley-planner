@@ -48,6 +48,16 @@ struct User: Identifiable, Codable {
     var accountType: AccountType
     var isPremium: Bool
     var notificationSettings: NotificationSettings
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case email
+        case appleId = "apple_id" // Mapeo a snake_case
+        case accountType = "account_type"
+        case isPremium = "is_premium"
+        case notificationSettings = "notification_settings"
+    }
 }
 
 struct Family: Identifiable, Codable {
@@ -535,19 +545,45 @@ struct NotificationSettings: Codable {
     var notifyOnDocumentAdded: Bool
     var quietHoursStart: Date?
     var quietHoursEnd: Date?
+
+    // Red de seguridad: Si falta alguna clave en el JSON, usa el valor de 'default'
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let def = NotificationSettings.default
+        
+        enablePushNotifications = try container.decodeIfPresent(Bool.self, forKey: .enablePushNotifications) ?? def.enablePushNotifications
+        enableEmailNotifications = try container.decodeIfPresent(Bool.self, forKey: .enableEmailNotifications) ?? def.enableEmailNotifications
+        notifyOnNewEvent = try container.decodeIfPresent(Bool.self, forKey: .notifyOnNewEvent) ?? def.notifyOnNewEvent
+        notifyOnEventReminder = try container.decodeIfPresent(Bool.self, forKey: .notifyOnEventReminder) ?? def.notifyOnEventReminder
+        notifyOnExpenseAdded = try container.decodeIfPresent(Bool.self, forKey: .notifyOnExpenseAdded) ?? def.notifyOnExpenseAdded
+        notifyOnExpenseApproved = try container.decodeIfPresent(Bool.self, forKey: .notifyOnExpenseApproved) ?? def.notifyOnExpenseApproved
+        notifyOnCustodyChange = try container.decodeIfPresent(Bool.self, forKey: .notifyOnCustodyChange) ?? def.notifyOnCustodyChange
+        notifyOnDocumentAdded = try container.decodeIfPresent(Bool.self, forKey: .notifyOnDocumentAdded) ?? def.notifyOnDocumentAdded
+        quietHoursStart = try container.decodeIfPresent(Date.self, forKey: .quietHoursStart)
+        quietHoursEnd = try container.decodeIfPresent(Date.self, forKey: .quietHoursEnd)
+    }
     
+    // Necesitamos esto para que el compilador no se queje al crear uno normal
+    init(enablePushNotifications: Bool, enableEmailNotifications: Bool, notifyOnNewEvent: Bool, notifyOnEventReminder: Bool, notifyOnExpenseAdded: Bool, notifyOnExpenseApproved: Bool, notifyOnCustodyChange: Bool, notifyOnDocumentAdded: Bool, quietHoursStart: Date?, quietHoursEnd: Date?) {
+        self.enablePushNotifications = enablePushNotifications
+        self.enableEmailNotifications = enableEmailNotifications
+        self.notifyOnNewEvent = notifyOnNewEvent
+        self.notifyOnEventReminder = notifyOnEventReminder
+        self.notifyOnExpenseAdded = notifyOnExpenseAdded
+        self.notifyOnExpenseApproved = notifyOnExpenseApproved
+        self.notifyOnCustodyChange = notifyOnCustodyChange
+        self.notifyOnDocumentAdded = notifyOnDocumentAdded
+        self.quietHoursStart = quietHoursStart
+        self.quietHoursEnd = quietHoursEnd
+    }
+
     static var `default`: NotificationSettings {
         NotificationSettings(
-            enablePushNotifications: true,
-            enableEmailNotifications: false,
-            notifyOnNewEvent: true,
-            notifyOnEventReminder: true,
-            notifyOnExpenseAdded: true,
-            notifyOnExpenseApproved: true,
-            notifyOnCustodyChange: true,
-            notifyOnDocumentAdded: true,
-            quietHoursStart: nil,
-            quietHoursEnd: nil
+            enablePushNotifications: true, enableEmailNotifications: false,
+            notifyOnNewEvent: true, notifyOnEventReminder: true,
+            notifyOnExpenseAdded: true, notifyOnExpenseApproved: true,
+            notifyOnCustodyChange: true, notifyOnDocumentAdded: true,
+            quietHoursStart: nil, quietHoursEnd: nil
         )
     }
 }
@@ -629,3 +665,25 @@ enum DashboardWidgetKind: String, Codable, CaseIterable {
 //        try container.encode(stringValue)
 //    }
 //}
+
+// MARK: - Errors
+
+enum DataError: Error, LocalizedError {
+    case userNotFound
+    case familyNotFound
+    case unauthorized
+    case networkError(Error)
+    
+    var errorDescription: String? {
+        switch self {
+        case .userNotFound:
+            return "No hemos podido encontrar tu perfil de usuario."
+        case .familyNotFound:
+            return "No pareces estar vinculado a ninguna familia aún."
+        case .unauthorized:
+            return "No tienes permiso para realizar esta acción."
+        case .networkError(let error):
+            return "Error de conexión: \(error.localizedDescription)"
+        }
+    }
+}
