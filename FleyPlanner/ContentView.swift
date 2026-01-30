@@ -8,37 +8,44 @@
 import SwiftUI
 
 struct ContentView: View {
-    @Environment(AppState.self) private var appState
-    @State private var viewModel: DashboardViewModel?
+//    @Environment(AppState.self) private var appState
+//    @State private var viewModel: DashboardViewModel?
+    
+    @State private var model = WidgetGridModel()
     
     var body: some View {
-        NavigationStack {
-            Group {
-                if let viewModel, let context = viewModel.context {
-                    DashboardContentView(context: context)
-                } else if viewModel?.isLoading == true {
-                    ProgressView("Loading...")
-                } else if let user = appState.currentUser {
-                    ProgressView("Initializing...")
-                        .task {
-                            await loadDashboard(for: user)
-                        }
-                } else {
-                    Text("Not authenticated")
-                }
-            }
-            .navigationTitle("Dashboard")
+        ZStack(alignment: .bottomTrailing) {
+            WidgetGrid()
         }
+        .environment(model)
+        
+//        NavigationStack {
+//            Group {
+//                if let viewModel, let context = viewModel.context {
+//                    DashboardContentView(context: context)
+//                } else if viewModel?.isLoading == true {
+//                    ProgressView("Loading...")
+//                } else if let user = appState.currentUser {
+//                    ProgressView("Initializing...")
+//                        .task {
+//                            await loadDashboard(for: user)
+//                        }
+//                } else {
+//                    Text("Not authenticated")
+//                }
+//            }
+//            .navigationTitle("Dashboard")
+//        }
     }
     
-    private func loadDashboard(for user: User) async {
-        let vm = DashboardViewModel(
-            dataService: appState.dataService,
-            currentUserId: user.id
-        )
-        viewModel = vm
-        await vm.load()
-    }
+//    private func loadDashboard(for user: User) async {
+//        let vm = DashboardViewModel(
+//            dataService: appState.dataService,
+//            currentUserId: user.id
+//        )
+//        viewModel = vm
+//        await vm.load()
+//    }
 }
 
 // MARK: - Dashboard Content

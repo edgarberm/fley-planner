@@ -15,10 +15,9 @@ struct FleyPlannerApp: App {
         WindowGroup {
             ContentView()
                 .environment(appState)
+                .preferredColorScheme(.light)
                 .task {
-                    print("🟡 App started, auto-signing in Edgar...")
                     await appState.signIn(userId: MockData.shared.edgar.id)
-                    print("🟢 Current user: \(appState.currentUser?.name ?? "nil")")
                 }
         }
     }
