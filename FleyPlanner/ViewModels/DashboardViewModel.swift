@@ -20,33 +20,23 @@ final class DashboardViewModel {
     init(dataService: DataService, currentUserId: UUID) {
         self.dataService = dataService
         self.currentUserId = currentUserId
-        print("🟢 DashboardViewModel initialized for user: \(currentUserId)")
     }
     
     @MainActor
     func load() async {
-        print("🔵 DashboardViewModel.load() started")
         isLoading = true
         defer {
             isLoading = false
-            print("🟡 DashboardViewModel.load() finished, isLoading = false")
         }
         
         do {
             context = try await loadContext()
-            print("🟢 Context loaded successfully")
-            print("   - Children: \(context?.activeChildren.count ?? 0)")
-            print("   - Events: \(context?.upcomingEvents.count ?? 0)")
-            print("   - Expenses: \(context?.pendingExpenses.count ?? 0)")
         } catch {
-            print("🔴 Error loading context: \(error)")
             self.error = error
         }
     }
     
     private func loadContext() async throws -> DashboardContext {
-        print("🔵 Loading context data...")
-        
         async let user = dataService.getUser(id: currentUserId)
         async let children = dataService.getChildren(for: currentUserId)
         async let bonds = dataService.getChildBonds(for: currentUserId)
@@ -61,13 +51,6 @@ final class DashboardViewModel {
         let loadedExpenses = await expenses
         let loadedAllUsers = await allUsers
         
-        print("   - User: \(loadedUser.name)")
-        print("   - Children: \(loadedChildren.count)")
-        print("   - Bonds: \(loadedBonds.count)")
-        print("   - Events: \(loadedEvents.count)")
-        print("   - Expenses: \(loadedExpenses.count)")
-        print("   - All users: \(loadedAllUsers.count)")
-        
         return DashboardContext.generate(
             for: loadedUser,
             children: loadedChildren,
@@ -76,5 +59,11 @@ final class DashboardViewModel {
             expenses: loadedExpenses,
             allUsers: loadedAllUsers
         )
+    }
+    
+    @MainActor
+    func bindWidgets(_ gridModel: WidgetGridModel) async {
+        guard let context else { return }
+        gridModel.refreshWidgetViews(context: context)
     }
 }

@@ -115,7 +115,7 @@ struct WidgetGrid: View {
                                     }
                                 }
                                 
-                                // NOTE: - Esto crea grupos de widgets
+                                // TODO: - Esto crea grupos de widgets
                                 //model.widgetTargetForGrouping = result.groupingTarget
                             }
                         }
@@ -126,33 +126,37 @@ struct WidgetGrid: View {
             .onEnded { _ in
                 var updated = widgets
                 var selectedWidgetPosition = model.selectedWidgetPosition
-
+                
                 if let targetID = model.widgetTargetForGrouping,
                    let dragged = model.selectedWidget,
                    let targetIndex = updated.firstIndex(where: { $0.id == targetID }),
-                   let draggedIndex = updated.firstIndex(where: { $0.id == dragged.id }) {
-
+                   // draggedIndex
+                   let _ = updated.firstIndex(where: { $0.id == dragged.id }) {
+                    
                     // Sacar los dos widgets
                     let targetWidget = updated.remove(at: targetIndex)
+                    
+                    // TODO: - Grouping gidgets
                     // Ajustar índice si el arrastrado estaba antes del target
-                    let draggedIndexAdjusted = targetIndex > draggedIndex ? draggedIndex : draggedIndex - 1
-                    let draggedWidget = updated.remove(at: draggedIndexAdjusted)
-
+                    // let draggedIndexAdjusted = targetIndex > draggedIndex ? draggedIndex : draggedIndex - 1
+                    
+                    //let draggedWidget = updated.remove(at: draggedIndexAdjusted)
+                    
                     // Crear grupo
-                    let group = WidgetGroup(widgets: [draggedWidget, targetWidget])
-                    let groupWidget = Widget(id: targetWidget.id, size: .medium, view: .group(group))
-
+                    //                    let group = WidgetGroup(widgets: [draggedWidget, targetWidget])
+                    //                    let groupWidget = Widget(id: targetWidget.id, size: .medium, view: .group(group))
+                    
                     // Insertar en posición del target original
-                    updated.insert(groupWidget, at: targetIndex)
+                    //updated.insert(groupWidget, at: targetIndex)
                     
                     selectedWidgetPosition = positions[targetWidget.id] ?? .zero
-
+                    
                     let packed = compactWidgets(updated)
                     
                     withAnimation(.snappy(duration: 0.25, extraBounce: 0)) {
                         widgets = packed
                     }
-
+                    
                     DispatchQueue.main.async {
                         syncToModel()
                     }

@@ -27,24 +27,25 @@ struct WidgetGroup: Identifiable, Hashable {
 
 enum WidgetContent {
     case view(AnyView)
-    case group(WidgetGroup)
+    //case group(WidgetGroup)
 }
 
 struct Widget: Identifiable, Hashable {
     var id: UUID = .init()
     var size: WidgetSize
+    var kind: DashboardWidgetKind
     
     var view: WidgetContent
     
     // UI state - no persistente
-    var frame: CGRect = .zero
-    var position: CGPoint = .zero
+//    var frame: CGRect = .zero
+//    var position: CGPoint = .zero
     
     // Hashable manual porque AnyView no es hashable
     static func == (lhs: Widget, rhs: Widget) -> Bool {
         lhs.id == rhs.id
     }
-
+    
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
@@ -53,27 +54,26 @@ struct Widget: Identifiable, Hashable {
 // MARK: - Modelo simplificado para un solo grid
 @Observable
 final class WidgetGridModel {
-    // MARK: - Core Data
     var widgets: [Widget] = []
-    // MARK: - UI State para scroll
+    
     var scrollOffset: CGFloat = 0
-    // MARK: - UI State para drag y drop
+    
     var selectedWidget: Widget?
     var dragOffset: CGSize = .zero
     var selectedWidgetScale: CGFloat = 1.0
     var selectedWidgetPosition: CGRect = .zero
     var isDraggingWidget: Bool = false
-    // MARK: - grouping
+    
     var widgetTargetForGrouping: UUID? = nil
-    var groupScrollPositions: [UUID: UUID] = [:] 
-    // MARK: - UI
+    var groupScrollPositions: [UUID: UUID] = [:]
+    
     var addMenuVisible: Bool = false
     
     init() {
         setupInitialData()
     }
     
-    // MARK: - Widget Management
+    
     func updateWidgets(_ newWidgets: [Widget]) {
         widgets = newWidgets
     }
@@ -101,54 +101,34 @@ final class WidgetGridModel {
         dragOffset = offset
     }
     
+    
     // MARK: - Private Setup
     private func setupInitialData() {
         widgets = createWidgetsList()
     }
 }
 
+extension WidgetGridModel {
+    func refreshWidgetViews(context: DashboardContext) {
+        widgets = widgets.map { widget in
+            var w = widget
+            w.view = .view(WidgetViewFactory.view(for: w, context: context))
+            return w
+        }
+    }
+}
+
 
 // MARK: - Helper function
+
 func createWidgetsList() -> [Widget] {
-//    let groupedWidgets: [Widget] = [
-//        .init(size: .medium, view: .view(AnyView(ExampleWidgetView()))),
-//        .init(size: .medium, view: .view(AnyView(ExampleWidgetView()))),
-//        .init(size: .medium, view: .view(AnyView(ExampleWidgetView()))),
-//        .init(size: .medium, view: .view(AnyView(ExampleWidgetView())))
-//    ]
-    
-//    let _group = WidgetGroup(widgets: groupedWidgets)
-    
     return [
-//        .init(size: .wide, view: .view(AnyView(
-//            CardWidgetView(
-//                size: .wide,
-//                type: .mastercard,
-//                name: "My mastercard",
-//                bank: "ING",
-//                number: "1234123412341234",
-//                expiration: .init(month: 03, year: 28),
-//                color: Color.green
-//            )
-//        ))),
-//        .init(size: .medium, view: .view(AnyView(
-//            CardWidgetView(
-//                size: .medium,
-//                type: .visa,
-//                name: "My visa",
-//                bank: "Deutsche Bank",
-//                number: "1234123412341234",
-//                expiration: .init(month: 03, year: 28),
-//                color: Color.pink
-//            )
-//        ))),
-        .init(size: .wide, view: .view(AnyView(ExampleWidgetView()))),
-        .init(size: .medium, view: .view(AnyView(ExampleWidgetView()))),
-        .init(size: .medium, view: .view(AnyView(ExampleWidgetView()))),
-//        .init(size: .wide, view: .group(_group)),
-        .init(size: .wide, view: .view(AnyView(ExampleWidgetView()))),
-        .init(size: .medium, view: .view(AnyView(ExampleWidgetView()))),
-        .init(size: .medium, view: .view(AnyView(ExampleWidgetView()))),
-        .init(size: .medium, view: .view(AnyView(ExampleWidgetView()))),
+        .init(size: .wide, kind: .todaySummary, view: .view(AnyView(EmptyView()))),
+        .init(size: .medium,kind: .miniCalendar, view: .view(AnyView(EmptyView()))),
+        .init(size: .medium,kind: .balance, view: .view(AnyView(EmptyView()))),
+        // .init(size: .wide, view: .group(_group)),
+        .init(size: .wide, kind: .upcomingEvents,view: .view(AnyView(EmptyView()))),
+        .init(size: .wide, kind: .pendingExpenses,view: .view(AnyView(EmptyView()))),
+        .init(size: .medium, kind: .childrenStatus,view: .view(AnyView(EmptyView()))),
     ]
 }

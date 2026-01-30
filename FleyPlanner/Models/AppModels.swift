@@ -595,6 +595,18 @@ struct WidgetUpcomingEvents: Codable {
     }
 }
 
+// Codable → persistencia futura (Supabase / local)
+// RawValue → fácil debug + storage
+// CaseIterable → menú “Añadir widget” más adelante
+enum DashboardWidgetKind: String, Codable, CaseIterable {
+    case miniCalendar
+    case todaySummary
+    case balance
+    case upcomingEvents
+    case pendingExpenses
+    case childrenStatus
+}
+
 // MARK: - Decimal Codable Extension
 
 //extension Decimal: Codable {

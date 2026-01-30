@@ -1,249 +1,349 @@
 //
 //  Widgets.swift
-//  Dotlock
+//  FleyPlanner
 //
-//  Created by Edgar Bermejo on 4/8/25.
+//  Created by Edgar Bermejo on 30/1/26.
 //
 
 import SwiftUI
 
-enum CardType {
-    case visa
-    case mastercard
-}
-
-struct ExpirationDate {
-    let month: Int  // 1...12
-    let year: Int   // año en formato 2 dígitos o 4 dígitos
-
-    // Añadir validaciones, e.g. mes válido y año razonable.
-}
-
-extension String {
-    func formattedCardNumber(for size: WidgetSize) -> String {
-        let last4 = String(suffix(4))
-        let bullet = "•" // Puedes probar con "⬤", "●", "◉", etc.
-        
-        switch size {
-        case .medium:
-            return "\(bullet)\(bullet)\(bullet)\(bullet) \(last4)"
-        case .wide:
-            return "\(bullet)\(bullet)\(bullet)\(bullet) \(bullet)\(bullet)\(bullet)\(bullet) \(bullet)\(bullet)\(bullet)\(bullet) \(last4)"
-        }
-    }
-}
-
-extension String {
-    func chunked(by length: Int) -> [String] {
-        stride(from: 0, to: count, by: length).map {
-            let start = index(startIndex, offsetBy: $0)
-            let end = index(start, offsetBy: length, limitedBy: endIndex) ?? endIndex
-            return String(self[start..<end])
-        }
-    }
-}
-
-
-struct ExampleWidgetView: View {
+// MARK: - Today widget
+struct TodayWidgetView: View {
+    let user: User
+    
     var body: some View {
-        VStack {
-            Spacer()
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Welcome back")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
             
-            VStack(alignment: .leading) {
-                Text("Widget title here")
-                    .font(.headline)
-                Text("Subtitle here")
+            Text(user.name)
+                .font(.title.bold())
+            
+            HStack {
+                Image(systemName: user.accountType == .adult ? "person.fill" : "person.crop.circle")
+                Text(user.accountType == .adult ? "Adult Account" : "Teen Account")
+                
+                if user.isPremium {
+                    Image(systemName: "star.fill")
+                        .foregroundStyle(.yellow)
+                    Text("Premium")
+                }
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+    }
+}
+
+// MARK: - Events widget
+struct EventsWidgetView: View {
+    let events: [CalendarEvent]
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            if events.isEmpty {
+                Text("No upcoming events")
                     .font(.subheadline)
-                    .foregroundColor(Color.secondary)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity)
+            } else {
+                ForEach(events.prefix(2)) { event in
+                    EventRow(event: event)
+                }
             }
         }
-        .foregroundColor(Color.primary)
         .padding()
-        .cornerRadius(RADIUS)
-        .clipped()
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(Color.white) // TODO: widget color
     }
 }
 
-//struct CardWidgetView: View {
-//    let size: WidgetSize
-//    let type: CardType
-//    let name: String
-//    let bank: String
-//    let number: String
-//    let expiration: ExpirationDate
-//    var color: Color?
-//    
-//    var body: some View {
-//        VStack(alignment: .leading) {
-//            HStack {
-//                IridescentChipView(baseColor: color ?? .gray)
-//                
-//                Spacer()
-//                
-//                Image("\(type)-gray")
-//                    .resizable()
-//                    .scaledToFit()
-//                    .frame(height: type == .mastercard ? 20 : 16)
-//            }
-//            
-//            Spacer()
-//            
-//            VStack(alignment: .leading) {
-//                Text(name)
-//                    .font(.headline)
-//                Text(bank)
-//                    .font(.subheadline)
-//                    .foregroundColor(Color.secondary)
-//                
-//                HStack {
-//                    Text(number.formattedCardNumber(for: size))
-//                        .font(.system(.body, design: .monospaced))
-//                        .padding(.top, 2)
-//                    
-//                    if size == .wide {
-//                        Spacer()
-//                        
-//                        Text("\(expiration.month)/\(expiration.year)")
-//                            .font(.body)
-//                            .foregroundColor(Color.secondary)
-//                    }
-//                }
-//            }
-//        }
-//        .padding(18)
-//        .cornerRadius(RADIUS)
-//        .clipped()
-//        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-//        .background(Color.white) // TODO: widget color
-//    }
-//}
+struct EventRow: View {
+    let event: CalendarEvent
+    
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: event.type.icon)
+                .font(.title2)
+                .foregroundStyle(.blue)
+                .frame(width: 40)
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(event.title)
+                    .font(.subheadline.bold())
+                
+                HStack {
+                    Text(event.startDate, style: .date)
+                    Text("at")
+                    Text(event.startDate, style: .time)
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                
+                if let location = event.location {
+                    Label(location, systemImage: "location.fill")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            
+            Spacer()
+            
+            VStack(alignment: .trailing, spacing: 4) {
+                Text(event.type.rawValue)
+                    .font(.caption2)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Color.blue.opacity(0.2))
+                    .foregroundStyle(.blue)
+                    .clipShape(Capsule())
+            }
+        }
+        .padding()
+    }
+}
 
-//struct IridescentChipView: View {
-//    let baseColor: Color
-//    
-//    private let width: CGFloat = 31
-//    private let height: CGFloat = 25
-//
-//    var body: some View {
-//        ZStack {
-//            RoundedRectangle(cornerRadius: 8, style: .continuous)
-//                .fill(baseColor)
-//                .frame(width: width, height: height)
-////                .blendMode(.screen)
-//            
-//            RoundedRectangle(cornerRadius: 8, style: .continuous)
-//                .fill(
-//                    AngularGradient(
-//                        gradient: Gradient(colors: [.red, .yellow, .green, .blue, .purple, .red]),
-//                        center: .center,
-//                        angle: .degrees(20)
-//                    )
-//                )
-//                .blur(radius: 0.6)
-//                .opacity(0.6)
-//                .blendMode(.screen)
-//                .frame(width: width, height: height)
-//
-//            Image("card-chip")
-//                .resizable()
-//                .scaledToFit()
-//                .frame(width: width + 2, height: height + 2)
-//                .foregroundColor(.white)
-//        }
-//        .frame(width: width, height: height)
-//    }
-//}
+// MARK: - Balance widget
+struct BalanceWidgetView: View {
+    let balance: UserBalance
 
+    var body: some View {
+        VStack(alignment: .leading) {
+            Text("Balance")
+                .font(.headline)
 
-//struct CreateLockWidgetView: View {
-//    var body: some View {
-//        VStack(alignment: .center) {
-//            Text("Create Lock")
-//                    .font(.headline)
-//            
-//            Spacer()
-//            
-//            HStack(alignment: .center) {
-//                Button(action: {
-//                    
-//                }) {
-//                    Image("plus")
-//                        .renderingMode(.template)
-//                        .resizable()
-//                        .scaledToFit()
-//                        .foregroundStyle(.white)
-//                        .frame(width: 24, height: 24)
-//                }
-//                .frame(width: 50, height: 50)
-//                .background(.black)
-//                .clipShape(Circle())
-//                
-//                Button(action: {
-//                    
-//                }) {
-//                    Image("plus")
-//                        .renderingMode(.template)
-//                        .resizable()
-//                        .scaledToFit()
-//                        .foregroundStyle(.white)
-//                        .frame(width: 24, height: 24)
-//                }
-//                .frame(width: 50, height: 50)
-//                .background(.black)
-//                .clipShape(Circle())
-//                
-//                Button(action: {
-//                    
-//                }) {
-//                    Image("plus")
-//                        .renderingMode(.template)
-//                        .resizable()
-//                        .scaledToFit()
-//                        .foregroundStyle(.white)
-//                        .frame(width: 24, height: 24)
-//                }
-//                .frame(width: 50, height: 50)
-//                .background(.black)
-//                .clipShape(Circle())
-//                
-//                Button(action: {
-//                    
-//                }) {
-//                    Image("plus")
-//                        .renderingMode(.template)
-//                        .resizable()
-//                        .scaledToFit()
-//                        .foregroundStyle(.white)
-//                        .frame(width: 24, height: 24)
-//                }
-//                .frame(width: 50, height: 50)
-//                .background(.black)
-//                .clipShape(Circle())
-//                
-//                Button(action: {
-//                    
-//                }) {
-//                    Image("plus")
-//                        .renderingMode(.template)
-//                        .resizable()
-//                        .scaledToFit()
-//                        .foregroundStyle(.white)
-//                        .frame(width: 24, height: 24)
-//                }
-//                .frame(width: 50, height: 50)
-//                .background(.black)
-//                .clipShape(Circle())
-//            }
-//            .frame(maxWidth: .infinity, alignment: .center)
-//            .padding(.horizontal, 0)
-//        }
-//        .foregroundColor(Color.primary)
-//        .padding()
-//        .cornerRadius(RADIUS)
-//        .clipped()
-//        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-//        .background(Color.white) // TODO: widget color
-//    }
-//}
+            HStack {
+                VStack(alignment: .leading) {
+                    Text("You owe")
+                    Text(balance.owed.formatted(.currency(code: "EUR")))
+                        .foregroundColor(.red)
+                }
+
+                VStack(alignment: .leading) {
+                    Text("Owed to you")
+                    Text(balance.owedTo.formatted(.currency(code: "EUR")))
+                        .foregroundColor(.green)
+                }
+            }
+        }
+        .padding()
+    }
+}
+
+// MARK: - Expenses widget
+struct ExpensesWidgetView: View {
+    let expenses: [Expense]
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if expenses.isEmpty {
+                Text("All expenses settled!")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color(.systemBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+            } else {
+                ForEach(expenses) { expense in
+                    ExpenseRow(expense: expense)
+                }
+            }
+        }
+        .padding()
+    }
+}
+
+struct ExpenseRow: View {
+    let expense: Expense
+    
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: categoryIcon)
+                .font(.title2)
+                .foregroundStyle(.orange)
+                .frame(width: 40)
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(expense.description)
+                    .font(.subheadline.bold())
+                
+                Text(expense.date, style: .date)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                
+                Text(expense.category.rawValue)
+                    .font(.caption2)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Color.orange.opacity(0.2))
+                    .foregroundStyle(.orange)
+                    .clipShape(Capsule())
+            }
+            
+            Spacer()
+            
+            VStack(alignment: .trailing) {
+                Text(formatAmount(expense.totalAmount))
+                    .font(.headline)
+                
+                Text(statusText)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding()
+    }
+    
+    private var categoryIcon: String {
+        switch expense.category {
+            case .medical: return "cross.case.fill"
+            case .education: return "book.fill"
+            case .clothing: return "tshirt.fill"
+            case .extracurricular: return "sportscourt.fill"
+            case .food: return "fork.knife"
+            case .other: return "tag.fill"
+        }
+    }
+    
+    private var statusText: String {
+        switch expense.status {
+            case .pending: return "Pending"
+            case .partiallySettled: return "Partial"
+            case .settled: return "Settled"
+        }
+    }
+    
+    private func formatAmount(_ amount: Decimal) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "EUR"
+        return formatter.string(from: NSDecimalNumber(decimal: amount)) ?? "€0.00"
+    }
+}
+
+// MARK: - Children widget
+
+struct ChildrenWidgetView: View {
+    let children: [DashboardContext.ChildSummary]
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Children")
+                .font(.headline)
+            
+            ForEach(children, id: \.child.id) { summary in
+                ChildCard(summary: summary)
+            }
+        }
+    }
+}
+
+struct ChildCard: View {
+    let summary: DashboardContext.ChildSummary
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                VStack(alignment: .leading) {
+                    Text(summary.child.name)
+                        .font(.title3.bold())
+                    
+                    Text(ageText)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                
+                Spacer()
+                
+                // Status indicator
+                if summary.isWithCurrentUser {
+                    Label("With you", systemImage: "house.fill")
+                        .font(.caption)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(.green.opacity(0.2))
+                        .foregroundStyle(.green)
+                        .clipShape(Capsule())
+                } else if let caregiver = summary.currentCaregiver {
+                    Label("With \(caregiver.name)", systemImage: "person.fill")
+                        .font(.caption)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(.blue.opacity(0.2))
+                        .foregroundStyle(.blue)
+                        .clipShape(Capsule())
+                }
+            }
+            
+            // Next event
+            if let event = summary.nextEvent {
+                Divider()
+                
+                HStack {
+                    Image(systemName: event.type.icon)
+                        .foregroundStyle(.secondary)
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(event.title)
+                            .font(.subheadline)
+                        Text(event.startDate, style: .relative)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    
+                    Spacer()
+                    
+                    if let location = event.location {
+                        Label(location, systemImage: "location.fill")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
+                }
+            }
+            
+            // Balance for this child
+            if summary.balance.net != 0 {
+                Divider()
+                
+                HStack {
+                    Image(systemName: summary.balance.net > 0 ? "arrow.up.circle.fill" : "arrow.down.circle.fill")
+                        .foregroundStyle(summary.balance.net > 0 ? .green : .red)
+                    
+                    Text(summary.balance.net > 0 ? "Owed to you" : "You owe")
+                        .font(.caption)
+                    
+                    Spacer()
+                    
+                    Text(summary.balance.formattedNet)
+                        .font(.subheadline.bold())
+                        .foregroundStyle(summary.balance.net > 0 ? .green : .red)
+                }
+            }
+            
+            // Unreviewed expenses
+            if summary.unreviewedExpenses > 0 {
+                Label("\(summary.unreviewedExpenses) pending expense\(summary.unreviewedExpenses > 1 ? "s" : "")",
+                      systemImage: "exclamationmark.circle.fill")
+                .font(.caption)
+                .foregroundStyle(.orange)
+            }
+        }
+        .padding()
+    }
+    
+    private var ageText: String {
+        let calendar = Calendar.current
+        let now = Date()
+        let components = calendar.dateComponents([.year, .month], from: summary.child.birthDate, to: now)
+        
+        if let years = components.year, years > 0 {
+            return "\(years) year\(years > 1 ? "s" : "") old"
+        } else if let months = components.month {
+            return "\(months) month\(months > 1 ? "s" : "") old"
+        }
+        return "Newborn"
+    }
+}

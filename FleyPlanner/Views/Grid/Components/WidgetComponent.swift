@@ -20,8 +20,8 @@ struct WidgetComponent: View {
                 case .view(let view):
                     view
                     
-                case .group(let group):
-                    WidgetGroupComponent(group: group, widget: widget, width: width, height: height)
+//                case .group(let group):
+//                    WidgetGroupComponent(group: group, widget: widget, width: width, height: height)
             }
             
             RoundedRectangle(cornerRadius: RADIUS, style: .continuous)
@@ -32,7 +32,7 @@ struct WidgetComponent: View {
                 .animation(.easeInOut(duration: 0.4), value: widget.id == model.widgetTargetForGrouping)
         }
         .frame(width: width, height: height)
-        .background(Color.gray.opacity(0.2))
+        .background(Color.white)
         .cornerRadius(RADIUS)
         .clipped()
     }
