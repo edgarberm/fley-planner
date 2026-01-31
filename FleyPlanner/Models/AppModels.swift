@@ -15,7 +15,7 @@ import SwiftUI
 
 enum AccountType: String, Codable {
     case adult
-    case teen
+    case children
     
     var defaultPermissions: Permissions {
         switch self {
@@ -27,7 +27,7 @@ enum AccountType: String, Codable {
                 canApproveExpenses: false,
                 canViewDocuments: true
             )
-        case .teen:
+        case .children:
             return Permissions(
                 canEditCalendar: false,
                 canViewExpenses: false,
