@@ -7,10 +7,9 @@
 
 import SwiftUI
 
-// TODO: v2 - Add localization
-// 1. Replace displayName with localizationKey
-// 2. Add Localizable.strings files
-// 3. Support multiple languages
+// TODO: Add localization
+// 1. Add Localizable.strings files
+// 2. Support multiple languages
 
 // MARK: - Core Entities
 
@@ -46,6 +45,8 @@ struct User: Identifiable, Codable {
     var email: String? // Opcional para teens
     var appleId: String
     var accountType: AccountType
+    var avatarURL: URL?
+    var address: Address?
     var isPremium: Bool
     var notificationSettings: NotificationSettings
     
@@ -53,8 +54,10 @@ struct User: Identifiable, Codable {
         case id
         case name
         case email
-        case appleId = "apple_id" // Mapeo a snake_case
+        case appleId = "apple_id"
         case accountType = "account_type"
+        case avatarURL = "avater_url"
+        case address
         case isPremium = "is_premium"
         case notificationSettings = "notification_settings"
     }
@@ -106,6 +109,16 @@ struct Child: Identifiable, Codable {
         
         return custodyConfig.getResponsibleAt(date: date)
     }
+}
+
+struct Address: Codable {
+    var label: String?        // "Casa", "Trabajo", "Abuelos"
+    var street: String
+    var city: String
+    var postalCode: String
+    var country: String
+    var latitude: Double?
+    var longitude: Double?
 }
 
 /// Vínculo de un TEEN con niños de su familia
@@ -463,7 +476,7 @@ enum Role: String, Codable {
     case caregiver
 }
 
-/// ✅ CORREGIDO: Con displayName, icon, equality normalizada
+
 enum RelationshipType: Codable, Hashable {
     case mother, father, stepParent, grandparent, nanny
     case other(String)
