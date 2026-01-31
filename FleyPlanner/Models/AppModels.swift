@@ -46,7 +46,7 @@ struct User: Identifiable, Codable {
     var appleId: String
     var accountType: AccountType
     var avatarURL: URL?
-    var address: Address?
+    var addresses: [Address]
     var isPremium: Bool
     var notificationSettings: NotificationSettings
     
@@ -57,7 +57,7 @@ struct User: Identifiable, Codable {
         case appleId = "apple_id"
         case accountType = "account_type"
         case avatarURL = "avater_url"
-        case address
+        case addresses
         case isPremium = "is_premium"
         case notificationSettings = "notification_settings"
     }
