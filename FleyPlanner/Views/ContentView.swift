@@ -26,10 +26,3 @@ struct ContentView: View {
         .animation(.spring(), value: appState.currentRoute)
     }
 }
-
-#Preview {
-    @Previewable @State var appState = AppState(dataService: MockDataService.shared)
-    
-    ContentView()
-        .environment(appState)
-}
