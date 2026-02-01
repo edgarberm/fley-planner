@@ -58,7 +58,7 @@ struct MockData {
         name: "Alberto",
         email: nil,
         appleId: "alberto_apple",
-        accountType: .teen,
+        accountType: .children,
         isPremium: false,
         notificationSettings: .default
     )
@@ -159,12 +159,7 @@ struct MockData {
             createdAt: Date(timeIntervalSince1970: 1704067200), // 2024-01-01
             accessMembers: [pilar.id, albertoP.id, edgar.id, david.id, albertoTeen.id],
             childrenIds: [alberto.id, alvaro.id, nico.id],
-            subscription: Family.FamilySubscription(
-                subscribedUserId: pilar.id,
-                status: .active,
-                startDate: Date(timeIntervalSince1970: 1704067200),
-                expiresAt: Date(timeIntervalSince1970: 1735689600) // 2025-01-01
-            )
+            inviteCode: "0000-0000"
         )
     }
     

@@ -54,6 +54,13 @@ final class SupabaseService: DataService {
         }
     }
     
+    func upsertUser(_ user: UserBootstrapPayload) async throws {
+        try await client
+            .from("users")
+            .upsert(user)
+            .execute()
+    }
+    
     func getFamily(for userId: UUID) async -> Family? {
         do {
             return try await client
@@ -72,6 +79,40 @@ final class SupabaseService: DataService {
     
     func getFamilyMembers(familyId: UUID) async -> [User] {
         return []
+    }
+    
+    func createFamily(_ payload: CreateFamilyPayload) async throws -> Family? {
+        do {
+            return try await client
+                .from("families")
+                .insert(payload)
+                .select()
+                .single()
+                .execute()
+                .value
+        } catch {
+            print("⚠️ No family created for user: \(error)")
+            return nil
+        }
+    }
+    
+    func joinFamily(_ payload: JoinFamilyPayload) async throws {
+        let insert = FamilyMemberInsert(
+            familyId: payload.familyId,
+            userId: payload.userId
+        )
+
+        try await client
+            .from("family_members")
+            .insert(insert)
+            .execute()
+    }
+
+    func addFamilyMember(_ payload: FamilyMemberInsert) async throws {
+        try await client
+            .from("family_members")
+            .insert(payload)
+            .execute()
     }
     
     func getChildren(for userId: UUID) async -> [Child] {

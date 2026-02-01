@@ -19,22 +19,22 @@ enum AccountType: String, Codable {
     
     var defaultPermissions: Permissions {
         switch self {
-        case .adult:
-            return Permissions(
-                canEditCalendar: true,
-                canViewExpenses: true,
-                canAddExpenses: true,
-                canApproveExpenses: false,
-                canViewDocuments: true
-            )
-        case .children:
-            return Permissions(
-                canEditCalendar: false,
-                canViewExpenses: false,
-                canAddExpenses: false,
-                canApproveExpenses: false,
-                canViewDocuments: false
-            )
+            case .adult:
+                return Permissions(
+                    canEditCalendar: true,
+                    canViewExpenses: true,
+                    canAddExpenses: true,
+                    canApproveExpenses: false,
+                    canViewDocuments: true
+                )
+            case .children:
+                return Permissions(
+                    canEditCalendar: false,
+                    canViewExpenses: false,
+                    canAddExpenses: false,
+                    canApproveExpenses: false,
+                    canViewDocuments: false
+                )
         }
     }
 }
@@ -46,7 +46,7 @@ struct User: Identifiable, Codable {
     var appleId: String
     var accountType: AccountType
     var avatarURL: URL?
-    var addresses: [Address]
+    var addresses: [Address]?
     var isPremium: Bool
     var notificationSettings: NotificationSettings
     
@@ -63,24 +63,102 @@ struct User: Identifiable, Codable {
     }
 }
 
+struct UserBootstrapPayload: Encodable {
+    let id: UUID
+    let name: String
+    let appleId: String
+    let accountType: AccountType
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case appleId = "apple_id"
+        case accountType = "account_type"
+    }
+}
+
 struct Family: Identifiable, Codable {
     let id: UUID
     var name: String
     var createdBy: UUID
     var createdAt: Date
-    var accessMembers: [UUID] // ✅ Renombrado para claridad
+    var accessMembers: [UUID]
     var childrenIds: [UUID]
-    var subscription: FamilySubscription?
-    
-    struct FamilySubscription: Codable {
-        var subscribedUserId: UUID
-        var status: SubscriptionStatus
-        var startDate: Date
-        var expiresAt: Date?
-        
+
+    // columnas planas
+    var subscriptionUserId: UUID?
+    var subscriptionStatus: FamilySubscription.SubscriptionStatus?
+    var subscriptionStartDate: Date?
+    var subscriptionExpiresAt: Date?
+
+    var inviteCode: String
+
+    enum CodingKeys: String, CodingKey {
+        case id, name
+        case createdBy = "created_by"
+        case createdAt = "created_at"
+        case accessMembers = "access_members"
+        case childrenIds = "children_ids"
+        case subscriptionUserId = "subscription_user_id"
+        case subscriptionStatus = "subscription_status"
+        case subscriptionStartDate = "subscription_start_date"
+        case subscriptionExpiresAt = "subscription_expires_at"
+        case inviteCode = "invite_code"
+    }
+
+    struct FamilySubscription {
         enum SubscriptionStatus: String, Codable {
             case active, cancelled, expired
         }
+    }
+}
+
+
+struct CreateFamilyPayload: Encodable {
+    let id: UUID
+    let name: String
+    let createdBy: UUID
+    let accessMembers: [UUID]
+    let inviteCode: String
+
+    // Suscripción (columnas planas)
+    let subscriptionUserId: UUID?
+    let subscriptionStatus: Family.FamilySubscription.SubscriptionStatus?
+    let subscriptionStartDate: Date?
+    let subscriptionExpiresAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case createdBy = "created_by"
+        case accessMembers = "access_members"
+        case inviteCode = "invite_code"
+        case subscriptionUserId = "subscription_user_id"
+        case subscriptionStatus = "subscription_status"
+        case subscriptionStartDate = "subscription_start_date"
+        case subscriptionExpiresAt = "subscription_expires_at"
+    }
+}
+
+
+
+struct JoinFamilyPayload {
+    let familyId: UUID
+    let userId: UUID
+    
+    enum CodingKeys: String, CodingKey {
+        case familyId = "family_id"
+        case userId = "user_id"
+    }
+}
+
+struct FamilyMemberInsert: Encodable {
+    let familyId: UUID
+    let userId: UUID
+    
+    enum CodingKeys: String, CodingKey {
+        case familyId = "family_id"
+        case userId = "user_id"
     }
 }
 
@@ -91,6 +169,15 @@ struct Child: Identifiable, Codable {
     var photo: URL?
     var custodyConfig: CustodyConfiguration
     var medicalInfo: MedicalInfo
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case birthDate = "birth_date"
+        case photo
+        case custodyConfig = "custody_config"
+        case medicalInfo = "medical_info"
+    }
     
     func whoIsResponsible(at date: Date, events: [CalendarEvent]) -> UUID? {
         let activeEvent = events
@@ -111,14 +198,30 @@ struct Child: Identifiable, Codable {
     }
 }
 
-struct Address: Codable {
-    var label: String?        // "Casa", "Trabajo", "Abuelos"
+struct Address: Identifiable, Codable {
+    let id: UUID
+    let userId: UUID
+    let familyId: UUID
+    var label: String
     var street: String
     var city: String
     var postalCode: String
     var country: String
     var latitude: Double?
     var longitude: Double?
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case userId = "user_id"
+        case familyId = "family_id"
+        case label
+        case street
+        case city
+        case postalCode = "postal_code"
+        case country
+        case latitude
+        case longitude
+    }
 }
 
 /// Vínculo de un TEEN con niños de su familia
@@ -161,12 +264,12 @@ enum CustodyConfiguration: Codable {
     
     func getResponsibleAt(date: Date) -> UUID? {
         switch self {
-        case .livingTogether(let primary):
-            return primary
-        case .sharedCustody(let parents, let schedule):
-            return schedule.getResponsibleAt(date: date, parents: parents)
-        case .singleParent(let parent):
-            return parent
+            case .livingTogether(let primary):
+                return primary
+            case .sharedCustody(let parents, let schedule):
+                return schedule.getResponsibleAt(date: date, parents: parents)
+            case .singleParent(let parent):
+                return parent
         }
     }
 }
@@ -195,33 +298,33 @@ enum CustodySchedule: Codable {
         guard !parents.isEmpty else { return nil }
         
         switch self {
-        case .weeklyAlternating(let startIndex, let startDate):
-            guard parents.indices.contains(startIndex) else { return nil }
-            
-            let weeksSinceStart = Calendar.current.dateComponents(
-                [.weekOfYear],
-                from: startDate,
-                to: date
-            ).weekOfYear ?? 0
-            
-            let currentParentIndex = (startIndex + weeksSinceStart) % parents.count
-            return parents[currentParentIndex]
-            
-        case .biweekly(let pattern):
-            return calculateBiweeklyPattern(date: date, pattern: pattern, parents: parents)
-            
-        case .weekdaysWeekends(let weekdayIndex, let weekendIndex):
-            let isWeekend = Calendar.current.isDateInWeekend(date)
-            let index = isWeekend ? weekendIndex : weekdayIndex
-            guard parents.indices.contains(index) else { return nil }
-            return parents[index]
-            
-        case .custom(let assignments):
-            guard let assignment = assignments.first(where: {
-                Calendar.current.isDate($0.date, inSameDayAs: date)
-            }) else { return nil }
-            guard parents.indices.contains(assignment.parentIndex) else { return nil }
-            return parents[assignment.parentIndex]
+            case .weeklyAlternating(let startIndex, let startDate):
+                guard parents.indices.contains(startIndex) else { return nil }
+                
+                let weeksSinceStart = Calendar.current.dateComponents(
+                    [.weekOfYear],
+                    from: startDate,
+                    to: date
+                ).weekOfYear ?? 0
+                
+                let currentParentIndex = (startIndex + weeksSinceStart) % parents.count
+                return parents[currentParentIndex]
+                
+            case .biweekly(let pattern):
+                return calculateBiweeklyPattern(date: date, pattern: pattern, parents: parents)
+                
+            case .weekdaysWeekends(let weekdayIndex, let weekendIndex):
+                let isWeekend = Calendar.current.isDateInWeekend(date)
+                let index = isWeekend ? weekendIndex : weekdayIndex
+                guard parents.indices.contains(index) else { return nil }
+                return parents[index]
+                
+            case .custom(let assignments):
+                guard let assignment = assignments.first(where: {
+                    Calendar.current.isDate($0.date, inSameDayAs: date)
+                }) else { return nil }
+                guard parents.indices.contains(assignment.parentIndex) else { return nil }
+                return parents[assignment.parentIndex]
         }
     }
     
@@ -278,12 +381,12 @@ struct CalendarEvent: Identifiable, Codable {
         
         var icon: String {
             switch self {
-            case .pickup: return "figure.walk.arrival"
-            case .dropoff: return "figure.walk.departure"
-            case .medical: return "cross.case"
-            case .school: return "book"
-            case .extracurricular: return "sportscourt"
-            case .other: return "calendar"
+                case .pickup: return "figure.walk.arrival"
+                case .dropoff: return "figure.walk.departure"
+                case .medical: return "cross.case"
+                case .school: return "book"
+                case .extracurricular: return "sportscourt"
+                case .other: return "calendar"
             }
         }
     }
@@ -318,13 +421,13 @@ enum CareItemType: String, Codable, CaseIterable {
     
     var icon: String {
         switch self {
-        case .clothing: return "tshirt"
-        case .medication: return "pills"
-        case .school: return "book"
-        case .food: return "fork.knife"
-        case .logistics: return "backpack"
-        case .health: return "heart"
-        case .other: return "checklist"
+            case .clothing: return "tshirt"
+            case .medication: return "pills"
+            case .school: return "book"
+            case .food: return "fork.knife"
+            case .logistics: return "backpack"
+            case .health: return "heart"
+            case .other: return "checklist"
         }
     }
 }
@@ -344,10 +447,10 @@ enum Priority: String, Codable {
     
     var color: String {
         switch self {
-        case .low: return "gray"
-        case .normal: return "blue"
-        case .high: return "orange"
-        case .urgent: return "red"
+            case .low: return "gray"
+            case .normal: return "blue"
+            case .high: return "orange"
+            case .urgent: return "red"
         }
     }
 }
@@ -483,23 +586,23 @@ enum RelationshipType: Codable, Hashable {
     
     var displayName: String {
         switch self {
-        case .mother: return "Mother"
-        case .father: return "Father"
-        case .stepParent: return "Stepparent"
-        case .grandparent: return "Grandparent"
-        case .nanny: return "Nanny"
-        case .other(let custom): return custom.capitalized
+            case .mother: return "Mother"
+            case .father: return "Father"
+            case .stepParent: return "Stepparent"
+            case .grandparent: return "Grandparent"
+            case .nanny: return "Nanny"
+            case .other(let custom): return custom.capitalized
         }
     }
     
     var icon: String {
         switch self {
-        case .mother: return "figure.dress.line.vertical.figure"
-        case .father: return "figure.stand"
-        case .stepParent: return "figure.2"
-        case .grandparent: return "figure.walk"
-        case .nanny: return "person.fill"
-        case .other: return "person.circle"
+            case .mother: return "figure.dress.line.vertical.figure"
+            case .father: return "figure.stand"
+            case .stepParent: return "figure.2"
+            case .grandparent: return "figure.walk"
+            case .nanny: return "person.fill"
+            case .other: return "person.circle"
         }
     }
     
@@ -509,27 +612,27 @@ enum RelationshipType: Codable, Hashable {
     
     static func == (lhs: RelationshipType, rhs: RelationshipType) -> Bool {
         switch (lhs, rhs) {
-        case (.mother, .mother), (.father, .father), (.stepParent, .stepParent),
-             (.grandparent, .grandparent), (.nanny, .nanny):
-            return true
-        case (.other(let lhsValue), .other(let rhsValue)):
-            return lhsValue.lowercased().trimmingCharacters(in: .whitespaces) ==
-                   rhsValue.lowercased().trimmingCharacters(in: .whitespaces)
-        default:
-            return false
+            case (.mother, .mother), (.father, .father), (.stepParent, .stepParent),
+                (.grandparent, .grandparent), (.nanny, .nanny):
+                return true
+            case (.other(let lhsValue), .other(let rhsValue)):
+                return lhsValue.lowercased().trimmingCharacters(in: .whitespaces) ==
+                rhsValue.lowercased().trimmingCharacters(in: .whitespaces)
+            default:
+                return false
         }
     }
     
     func hash(into hasher: inout Hasher) {
         switch self {
-        case .mother: hasher.combine("mother")
-        case .father: hasher.combine("father")
-        case .stepParent: hasher.combine("stepParent")
-        case .grandparent: hasher.combine("grandparent")
-        case .nanny: hasher.combine("nanny")
-        case .other(let value):
-            hasher.combine("other")
-            hasher.combine(value.lowercased().trimmingCharacters(in: .whitespaces))
+            case .mother: hasher.combine("mother")
+            case .father: hasher.combine("father")
+            case .stepParent: hasher.combine("stepParent")
+            case .grandparent: hasher.combine("grandparent")
+            case .nanny: hasher.combine("nanny")
+            case .other(let value):
+                hasher.combine("other")
+                hasher.combine(value.lowercased().trimmingCharacters(in: .whitespaces))
         }
     }
 }
@@ -558,7 +661,7 @@ struct NotificationSettings: Codable {
     var notifyOnDocumentAdded: Bool
     var quietHoursStart: Date?
     var quietHoursEnd: Date?
-
+    
     // Red de seguridad: Si falta alguna clave en el JSON, usa el valor de 'default'
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -589,7 +692,7 @@ struct NotificationSettings: Codable {
         self.quietHoursStart = quietHoursStart
         self.quietHoursEnd = quietHoursEnd
     }
-
+    
     static var `default`: NotificationSettings {
         NotificationSettings(
             enablePushNotifications: true, enableEmailNotifications: false,
@@ -689,14 +792,32 @@ enum DataError: Error, LocalizedError {
     
     var errorDescription: String? {
         switch self {
-        case .userNotFound:
-            return "No hemos podido encontrar tu perfil de usuario."
-        case .familyNotFound:
-            return "No pareces estar vinculado a ninguna familia aún."
-        case .unauthorized:
-            return "No tienes permiso para realizar esta acción."
-        case .networkError(let error):
-            return "Error de conexión: \(error.localizedDescription)"
+            case .userNotFound:
+                return "No hemos podido encontrar tu perfil de usuario."
+            case .familyNotFound:
+                return "No pareces estar vinculado a ninguna familia aún."
+            case .unauthorized:
+                return "No tienes permiso para realizar esta acción."
+            case .networkError(let error):
+                return "Error de conexión: \(error.localizedDescription)"
+        }
+    }
+}
+
+enum AppError: LocalizedError {
+    case notAuthenticated
+    case incompleteProfile
+    case invalidInviteCode
+    case userNotFound
+    case unknown
+    
+    var errorDescription: String? {
+        switch self {
+        case .notAuthenticated:  return "Not authenticated"
+        case .incompleteProfile: return "Incomplete profile"
+        case .invalidInviteCode: return "Invalid invite code"
+        case .userNotFound:      return "User not found after registration"
+        case .unknown:           return "An unknown error occurred"
         }
     }
 }

@@ -32,6 +32,8 @@ final class MockDataService: DataService {
         return user
     }
     
+    func upsertUser(_ user: UserBootstrapPayload) async throws {}
+    
     func getFamily(for userId: UUID) async -> Family? {
         try? await Task.sleep(nanoseconds: 400_000_000)
         return mockData.family
@@ -41,6 +43,11 @@ final class MockDataService: DataService {
         try? await Task.sleep(nanoseconds: 200_000_000)
         return mockData.allUsers
     }
+    
+    func createFamily(_ payload: CreateFamilyPayload) async throws -> Family? { return nil }
+    func joinFamily(_ payload: JoinFamilyPayload) async throws {}
+    
+    func addFamilyMember(_ payload: FamilyMemberInsert) async throws {}
     
     func getChildren(for userId: UUID) async -> [Child] {
         try? await Task.sleep(nanoseconds: 400_000_000)

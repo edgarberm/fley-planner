@@ -14,11 +14,11 @@ struct ContentView: View {
         ZStack {
             switch appState.currentRoute {
                 case .splash:
-                    ProgressView() // O una Splash Screen chula
+                    ProgressView() // Splash Screen chula
                 case .auth:
                     SignInView()
                 case .onboarding:
-                    OnboardingContainerView() // Pasos 2 a 9 de tu workflow
+                    OnboardingContainerView()
                 case .main:
                     DashboardView()
             }

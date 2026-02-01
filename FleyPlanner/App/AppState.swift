@@ -21,6 +21,11 @@ final class AppState {
     var currentUser: User?
     var currentFamily: Family?
     
+    /// Nombre que nos da Apple durante el Sign In.
+    /// Solo disponible la primera vez que el usuario firma.
+    /// Apple NO lo vuelve a dar en sesiones posteriores.
+    var appleFullName: String?
+    
     private(set) var dataService: DataService
     
     init(dataService: DataService = SupabaseService.shared) {
@@ -80,32 +85,91 @@ final class AppState {
             print("❌ Error guardando perfil: \(error)")
         }
     }
+    
+    func completeUserBootstrap(onboarding: OnboardingState) async throws {
+        guard let authUserId = SupabaseService.shared.client.auth.currentUser?.id else {
+            throw AppError.notAuthenticated
+        }
+        
+        guard !onboarding.name.isEmpty else {
+            throw AppError.incompleteProfile
+        }
+        
+        let payload = UserBootstrapPayload(
+            id: authUserId,
+            name: onboarding.name,
+            appleId: authUserId.uuidString,
+            accountType: onboarding.accountType
+        )
+        
+        try await dataService.upsertUser(payload)
+        
+        // Guard en vez de force unwrap
+        guard let user = await dataService.getUser(id: authUserId) else {
+            throw AppError.userNotFound  // ← Añadir este caso a AppError
+        }
+        
+        self.currentUser = user
+    }
+    
+    @MainActor
+    func createFamily(name: String) async throws {
+        guard let user = currentUser else {
+            throw AppError.notAuthenticated
+        }
+
+        let familyId = UUID()
+        let inviteCode = createfamilyInviteCode(familyId.uuidString)
+        
+        // 1️⃣ Creamos la familia
+        let payload = CreateFamilyPayload(
+            id: familyId,
+            name: name,
+            createdBy: user.id,
+            accessMembers: [user.id],  // Lo dejamos por compatibilidad con tu modelo
+            inviteCode: inviteCode,
+            subscriptionUserId: user.id,
+            subscriptionStatus: .active,
+            subscriptionStartDate: Date(),
+            subscriptionExpiresAt: Calendar.current.date(byAdding: .month, value: 1, to: Date())
+        )
+
+        let family = try await dataService.createFamily(payload)
+        
+        // 2️⃣ Creamos la relación en family_members
+        let memberPayload = FamilyMemberInsert(
+            familyId: familyId,
+            userId: user.id
+        )
+        try await dataService.addFamilyMember(memberPayload)
+        
+        self.currentFamily = family
+    }
+
+    @MainActor
+    func joinFamily(inviteCode: String) async throws {
+        guard let user = currentUser else {
+            throw AppError.notAuthenticated
+        }
+
+        guard let familyId = UUID(uuidString: inviteCode) else {
+            throw AppError.invalidInviteCode
+        }
+
+        // TODO: review model. userId need to be added to access_members
+        let payload = JoinFamilyPayload(
+            familyId: familyId,
+            userId: user.id
+        )
+
+        try await dataService.joinFamily(payload)
+
+        let family = await dataService.getFamily(for: user.id)
+
+        self.currentFamily = family
+    }
+    
+    func completeOnboarding() {
+        self.currentRoute = .main
+    }
 }
-
-
-//
-//@Observable
-//final class AppState {
-//    var currentUser: User?
-//    private(set) var dataService: DataService
-//
-//    init(dataService: DataService = MockDataService.shared) {
-//        self.dataService = dataService
-//        print("🟢 AppState initialized")
-//    }
-//
-//    var isAuthenticated: Bool {
-//        currentUser != nil
-//    }
-//
-//    func signIn(userId: UUID) async {
-//        print("🔵 Signing in user: \(userId)")
-//        currentUser = await dataService.getUser(id: userId)
-//        print("🟢 Signed in as: \(currentUser?.name ?? "nil")")
-//    }
-//
-//    func signOut() {
-//        print("🔴 Signing out")
-//        currentUser = nil
-//    }
-//}

@@ -13,8 +13,15 @@ protocol DataService {
     func saveUser(_ user: User) async throws
     
     func getUser(id: UUID) async -> User?
+    func upsertUser(_ user: UserBootstrapPayload) async throws
+    
     func getFamily(for userId: UUID) async -> Family?
     func getFamilyMembers(familyId: UUID) async -> [User]
+    func createFamily(_ payload: CreateFamilyPayload) async throws -> Family?
+    func joinFamily(_ payload: JoinFamilyPayload) async throws
+    
+    func addFamilyMember(_ payload: FamilyMemberInsert) async throws
+    
     func getChildren(for userId: UUID) async -> [Child]
     func getChildBonds(for userId: UUID) async -> [ChildBond]
     func getEvents(for userId: UUID) async -> [CalendarEvent]

@@ -38,21 +38,23 @@ struct DashboardView: View {
     }
     
     private func loadDashboard(for user: User) async {
+        guard let user = appState.currentUser,
+              let family = appState.currentFamily else { return }
+        
         let vm = DashboardViewModel(
             dataService: appState.dataService,
-            currentUserId: user.id
+            currentUser: user,
+            familyId: family.id
         )
         viewModel = vm
         await vm.load()
-        
-        // Después de cargar los datos, sincronizamos widgets
         await vm.bindWidgets(model)
     }
 }
 
-#Preview {
-    @Previewable @State var appState = AppState(dataService: MockDataService.shared)
-    
-    DashboardView()
-        .environment(appState)
-}
+//#Preview {
+//    @Previewable @State var appState = AppState(dataService: SupabaseService.shared)
+//    
+//    DashboardView()
+//        .environment(appState)
+//}

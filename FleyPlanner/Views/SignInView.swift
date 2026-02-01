@@ -53,6 +53,9 @@ struct SignInView: View {
                             .compactMap { $0 }
                             .joined(separator: " ")
                         
+                        // Guardamos el nombre en AppState antes de avanzar
+                        appState.appleFullName = name.isEmpty ? nil : name
+                        
                         let newUser = User(
                             id: userId,
                             name: name.isEmpty ? "Nuevo Usuario" : name,

@@ -11,23 +11,23 @@ import Observation
 @Observable
 final class DashboardViewModel {
     private let dataService: DataService
-    private let currentUserId: UUID
+    private let currentUser: User        // ← Cambio: recibe User, no UUID
+    private let familyId: UUID           // ← Cambio: recibe familyId directamente
     
     var context: DashboardContext?
     var isLoading = false
     var error: Error?
     
-    init(dataService: DataService, currentUserId: UUID) {
+    init(dataService: DataService, currentUser: User, familyId: UUID) {
         self.dataService = dataService
-        self.currentUserId = currentUserId
+        self.currentUser = currentUser
+        self.familyId = familyId
     }
     
     @MainActor
     func load() async {
         isLoading = true
-        defer {
-            isLoading = false
-        }
+        defer { isLoading = false }
         
         do {
             context = try await loadContext()
@@ -37,31 +37,18 @@ final class DashboardViewModel {
     }
     
     private func loadContext() async throws -> DashboardContext {
-        // 1. Cargamos al usuario actual
-        guard let loadedUser = await dataService.getUser(id: currentUserId) else {
-            throw DataError.userNotFound
-        }
+        // Todo en paralelo, sin necesidad de llamadas secuenciales
+        async let children = dataService.getChildren(for: familyId)
+        async let members = dataService.getFamilyMembers(familyId: familyId)
+        async let bonds = dataService.getChildBonds(for: currentUser.id)
+        async let events = dataService.getEvents(for: currentUser.id)
+        async let expenses = dataService.getExpenses(for: currentUser.id)
         
-        // 2. Cargamos la familia (el contenedor de seguridad)
-        guard let family = await dataService.getFamily(for: currentUserId) else {
-            throw DataError.familyNotFound
-        }
+        let (loadedChildren, loadedMembers, loadedBonds, loadedEvents, loadedExpenses) =
+            await (children, members, bonds, events, expenses)
         
-        // 3. Ahora lanzamos en paralelo lo que depende de la familia/usuario
-        // Usamos el ID de la familia para obtener a los otros miembros (Pilar, Edgar, etc.)
-        async let children = dataService.getChildren(for: family.id)
-        async let members = dataService.getFamilyMembers(familyId: family.id)
-        async let bonds = dataService.getChildBonds(for: currentUserId)
-        async let events = dataService.getEvents(for: currentUserId)
-        async let expenses = dataService.getExpenses(for: currentUserId)
-        
-        // 4. Await de todo el bloque
-        let (loadedChildren, loadedMembers, loadedBonds, loadedEvents, loadedExpenses) = await (children, members, bonds, events, expenses)
-        
-        // 5. Generamos el contexto
-        // 'allUsers' ahora son los miembros reales de la familia traídos de Supabase
         return DashboardContext.generate(
-            for: loadedUser,
+            for: currentUser,                // ← Usa el user que ya tenemos
             children: loadedChildren,
             bonds: loadedBonds,
             events: loadedEvents,
