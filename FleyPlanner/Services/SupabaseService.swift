@@ -7,7 +7,6 @@
 
 import Foundation
 import Supabase
-import Auth
 
 final class SupabaseService: DataService {
     static let shared = SupabaseService()
@@ -21,6 +20,8 @@ final class SupabaseService: DataService {
         )
     }
     
+    // MARK: - Auth
+    
     func signInWithApple(idToken: String, nonce: String? = nil) async throws -> UUID {
         let response = try await client.auth.signInWithIdToken(
             credentials: .init(provider: .apple, idToken: idToken, nonce: nonce)
@@ -30,21 +31,27 @@ final class SupabaseService: DataService {
 
     func saveUser(_ user: User) async throws {
         try await client
-            .from("users") // Tu tabla en Supabase
+            .from("users")
             .upsert(user)
             .execute()
     }
     
+    // MARK: - User
+    
     func getUser(id: UUID) async -> User? {
         do {
-            return try await client.from("users")
+            let user: User = try await client
+                .from("users")
                 .select()
                 .eq("id", value: id)
                 .single()
                 .execute()
                 .value
+            
+            print("✅ User loaded: \(user.name)")
+            return user
+            
         } catch {
-            // Solo imprimimos si el error NO es que no existe el registro
             if let pgError = error as? PostgrestError, pgError.code == "PGRST116" {
                 print("👤 Usuario nuevo detectado (sin perfil en DB)")
             } else {
@@ -59,40 +66,107 @@ final class SupabaseService: DataService {
             .from("users")
             .upsert(user)
             .execute()
+        
+        print("✅ User upserted")
     }
+    
+    // MARK: - Family
     
     func getFamily(for userId: UUID) async -> Family? {
         do {
-            return try await client
-                .from("families")
-                .select()
-            // Buscamos si el userId está dentro del array access_members de Postgres
-                .contains("access_members", value: [userId])
+            // 1. Buscar en family_members
+            struct FamilyMemberRow: Decodable {
+                let family_id: UUID
+            }
+            
+            let memberRow: FamilyMemberRow = try await client
+                .from("family_members")
+                .select("family_id")
+                .eq("user_id", value: userId)  // ← Busca correctamente
                 .single()
                 .execute()
                 .value
+            
+            print("✅ Found family_id: \(memberRow.family_id)")
+            
+            // 2. Obtener la familia completa
+            let family: Family = try await client
+                .from("families")
+                .select()
+                .eq("id", value: memberRow.family_id)
+                .single()
+                .execute()
+                .value
+            
+            print("✅ Family loaded: \(family.name)")
+            return family
+            
         } catch {
-            print("⚠️ No family found for user: \(error)")
+            if let pgError = error as? PostgrestError, pgError.code == "PGRST116" {
+                print("⚠️ No family found for user (expected for new users)")
+            } else {
+                print("❌ Error fetching family: \(error)")
+            }
             return nil
         }
     }
     
     func getFamilyMembers(familyId: UUID) async -> [User] {
-        return []
+        do {
+            // 1. Obtener user_ids de family_members
+            struct MemberRow: Decodable {
+                let user_id: UUID
+            }
+            
+            let memberRows: [MemberRow] = try await client
+                .from("family_members")
+                .select("user_id")
+                .eq("family_id", value: familyId)
+                .execute()
+                .value
+            
+            let userIds = memberRows.map { $0.user_id }
+            
+            guard !userIds.isEmpty else {
+                print("⚠️ No members found for family")
+                return []
+            }
+            
+            print("✅ Found \(userIds.count) member(s) for family")
+            
+            // 2. Obtener usuarios completos
+            let users: [User] = try await client
+                .from("users")
+                .select()
+                .in("id", values: userIds)
+                .execute()
+                .value
+            
+            print("✅ Family members loaded: \(users.count)")
+            return users
+            
+        } catch {
+            print("❌ Error fetching family members: \(error)")
+            return []
+        }
     }
     
     func createFamily(_ payload: CreateFamilyPayload) async throws -> Family? {
         do {
-            return try await client
+            let family: Family = try await client
                 .from("families")
                 .insert(payload)
                 .select()
                 .single()
                 .execute()
                 .value
+            
+            print("✅ Family created: \(family.name)")
+            return family
+            
         } catch {
-            print("⚠️ No family created for user: \(error)")
-            return nil
+            print("❌ Error creating family: \(error)")
+            throw error
         }
     }
     
@@ -106,6 +180,8 @@ final class SupabaseService: DataService {
             .from("family_members")
             .insert(insert)
             .execute()
+        
+        print("✅ User joined family")
     }
 
     func addFamilyMember(_ payload: FamilyMemberInsert) async throws {
@@ -113,74 +189,123 @@ final class SupabaseService: DataService {
             .from("family_members")
             .insert(payload)
             .execute()
+        
+        print("✅ Family member added")
     }
     
-    func getChildren(for userId: UUID) async -> [Child] {
+    // MARK: - Children & Related Data
+    
+    func getChildren(for familyId: UUID) async -> [Child] {
         do {
-            return try await client.from("children")
+            let children: [Child] = try await client
+                .from("children")
                 .select()
-                .eq("id", value: userId)
-            //.single()
+                .eq("family_id", value: familyId)
                 .execute()
                 .value
+            
+            print("✅ Children loaded: \(children.count)")
+            return children
+            
         } catch {
-            print("❌ Error fetching user: \(error)")
+            print("❌ Error fetching children: \(error)")
             return []
         }
     }
     
     func getChildBonds(for userId: UUID) async -> [ChildBond] {
         do {
-            return try await client.from("child_bonds")
+            let bonds: [ChildBond] = try await client
+                .from("child_bonds")
                 .select()
-                .eq("id", value: userId)
-            //.single()
+                .eq("user_id", value: userId)
                 .execute()
                 .value
+            
+            print("✅ Child bonds loaded: \(bonds.count)")
+            return bonds
+            
         } catch {
-            print("❌ Error fetching user: \(error)")
+            print("❌ Error fetching child bonds: \(error)")
             return []
         }
     }
     
     func getEvents(for userId: UUID) async -> [CalendarEvent] {
         do {
-            return try await client.from("events")
+            // Primero obtenemos los bonds para saber qué children tiene el usuario
+            let bonds = await getChildBonds(for: userId)
+            let childIds = bonds.map { $0.childId }
+            
+            guard !childIds.isEmpty else {
+                print("⚠️ No children found for user, returning empty events")
+                return []
+            }
+            
+            let events: [CalendarEvent] = try await client
+                .from("events")
                 .select()
-                .eq("id", value: userId)
-            //.single()
+                .in("child_id", values: childIds)
                 .execute()
                 .value
+            
+            print("✅ Events loaded: \(events.count)")
+            return events
+            
         } catch {
-            print("❌ Error fetching user: \(error)")
+            print("❌ Error fetching events: \(error)")
             return []
         }
     }
     
     func getExpenses(for userId: UUID) async -> [Expense] {
         do {
-            return try await client.from("expenses")
+            let bonds = await getChildBonds(for: userId)
+            let childIds = bonds.map { $0.childId }
+            
+            guard !childIds.isEmpty else {
+                print("⚠️ No children found for user, returning empty expenses")
+                return []
+            }
+            
+            let expenses: [Expense] = try await client
+                .from("expenses")
                 .select()
-                .eq("id", value: userId)
-            //.single()
+                .in("child_id", values: childIds)
                 .execute()
                 .value
+            
+            print("✅ Expenses loaded: \(expenses.count)")
+            return expenses
+            
         } catch {
-            print("❌ Error fetching user: \(error)")
+            print("❌ Error fetching expenses: \(error)")
             return []
         }
     }
     
     func getCareItems(for userId: UUID) async -> [CareItem] {
         do {
-            return try await client.from("care_items")
+            let bonds = await getChildBonds(for: userId)
+            let childIds = bonds.map { $0.childId }
+            
+            guard !childIds.isEmpty else {
+                print("⚠️ No children found for user, returning empty care items")
+                return []
+            }
+            
+            let items: [CareItem] = try await client
+                .from("care_items")
                 .select()
-                .eq("id", value: userId)
-            //.single()
+                .in("child_id", values: childIds)
                 .execute()
                 .value
+            
+            print("✅ Care items loaded: \(items.count)")
+            return items
+            
         } catch {
-            print("❌ Error fetching user: \(error)")
+            print("❌ Error fetching care items: \(error)")
             return []
         }
     }

@@ -8,13 +8,15 @@
 import SwiftUI
 import Observation
 
-// MARK: - Constantes
+// MARK: - Constants
+
 let PADDING: CGFloat = 6.0
 let SPACING: CGFloat = 16.0
 let RADIUS: CGFloat = 22.0
 let groupingThreshold: CGFloat = 12
 
-// MARK: - Enums y Structs
+// MARK: - Widget Structure
+
 enum WidgetSize {
     case wide
     case medium
@@ -34,12 +36,10 @@ struct Widget: Identifiable, Hashable {
     var id: UUID = .init()
     var size: WidgetSize
     var kind: DashboardWidgetKind
-    
     var view: WidgetContent
     
-    // UI state - no persistente
-//    var frame: CGRect = .zero
-//    var position: CGPoint = .zero
+    // Metadata adicional para widgets de onboarding
+    var onboardingAction: (() -> Void)?
     
     // Hashable manual porque AnyView no es hashable
     static func == (lhs: Widget, rhs: Widget) -> Bool {
@@ -51,7 +51,8 @@ struct Widget: Identifiable, Hashable {
     }
 }
 
-// MARK: - Modelo simplificado para un solo grid
+// MARK: - Grid Model
+
 @Observable
 final class WidgetGridModel {
     var widgets: [Widget] = []
@@ -69,10 +70,13 @@ final class WidgetGridModel {
     
     var addMenuVisible: Bool = false
     
+    // Callbacks para widgets de onboarding
+    var onAddChildTapped: (() -> Void)?
+    var onInvitePartnerTapped: (() -> Void)?
+    
     init() {
         setupInitialData()
     }
-    
     
     func updateWidgets(_ newWidgets: [Widget]) {
         widgets = newWidgets
@@ -101,14 +105,13 @@ final class WidgetGridModel {
         dragOffset = offset
     }
     
-    
-    // MARK: - Private Setup
     private func setupInitialData() {
         widgets = createWidgetsList()
     }
 }
 
 extension WidgetGridModel {
+    /// Refresca los widgets con datos reales del contexto
     func refreshWidgetViews(context: DashboardContext) {
         widgets = widgets.map { widget in
             var w = widget
@@ -116,19 +119,53 @@ extension WidgetGridModel {
             return w
         }
     }
+    
+    /// Crea widgets de onboarding cuando no hay datos
+    func setupOnboardingWidgets() {
+        print("🎯 Setting up onboarding widgets")
+        
+        widgets = [
+            Widget(
+                size: .wide,
+                kind: .onboardingWelcome,
+                view: .view(AnyView(EmptyView()))
+            ),
+            Widget(
+                size: .medium,
+                kind: .onboardingAddChild,
+                view: .view(AnyView(EmptyView())),
+                onboardingAction: { [weak self] in
+                    self?.onAddChildTapped?()
+                }
+            ),
+            Widget(
+                size: .medium,
+                kind: .onboardingInvitePartner,
+                view: .view(AnyView(EmptyView())),
+                onboardingAction: { [weak self] in
+                    self?.onInvitePartnerTapped?()
+                }
+            )
+        ]
+        
+        // Renderizar las vistas
+        widgets = widgets.map { widget in
+            var w = widget
+            w.view = .view(WidgetViewFactory.onboardingView(for: w))
+            return w
+        }
+    }
 }
 
-
-// MARK: - Helper function
+// MARK: - Helper Functions
 
 func createWidgetsList() -> [Widget] {
     return [
         .init(size: .wide, kind: .todaySummary, view: .view(AnyView(EmptyView()))),
-        .init(size: .medium,kind: .miniCalendar, view: .view(AnyView(EmptyView()))),
-        .init(size: .medium,kind: .balance, view: .view(AnyView(EmptyView()))),
-        // .init(size: .wide, view: .group(_group)),
-        .init(size: .wide, kind: .upcomingEvents,view: .view(AnyView(EmptyView()))),
-        .init(size: .wide, kind: .pendingExpenses,view: .view(AnyView(EmptyView()))),
-        .init(size: .medium, kind: .childrenStatus,view: .view(AnyView(EmptyView()))),
+        .init(size: .medium, kind: .miniCalendar, view: .view(AnyView(EmptyView()))),
+        .init(size: .medium, kind: .balance, view: .view(AnyView(EmptyView()))),
+        .init(size: .wide, kind: .upcomingEvents, view: .view(AnyView(EmptyView()))),
+        .init(size: .wide, kind: .pendingExpenses, view: .view(AnyView(EmptyView()))),
+        .init(size: .medium, kind: .childrenStatus, view: .view(AnyView(EmptyView()))),
     ]
 }

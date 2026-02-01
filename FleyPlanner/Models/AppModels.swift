@@ -84,15 +84,15 @@ struct Family: Identifiable, Codable {
     var createdAt: Date
     var accessMembers: [UUID]
     var childrenIds: [UUID]
-
+    
     // columnas planas
     var subscriptionUserId: UUID?
     var subscriptionStatus: FamilySubscription.SubscriptionStatus?
     var subscriptionStartDate: Date?
     var subscriptionExpiresAt: Date?
-
+    
     var inviteCode: String
-
+    
     enum CodingKeys: String, CodingKey {
         case id, name
         case createdBy = "created_by"
@@ -105,7 +105,7 @@ struct Family: Identifiable, Codable {
         case subscriptionExpiresAt = "subscription_expires_at"
         case inviteCode = "invite_code"
     }
-
+    
     struct FamilySubscription {
         enum SubscriptionStatus: String, Codable {
             case active, cancelled, expired
@@ -120,13 +120,13 @@ struct CreateFamilyPayload: Encodable {
     let createdBy: UUID
     let accessMembers: [UUID]
     let inviteCode: String
-
+    
     // Suscripción (columnas planas)
     let subscriptionUserId: UUID?
     let subscriptionStatus: Family.FamilySubscription.SubscriptionStatus?
     let subscriptionStartDate: Date?
     let subscriptionExpiresAt: Date?
-
+    
     enum CodingKeys: String, CodingKey {
         case id
         case name
@@ -164,6 +164,7 @@ struct FamilyMemberInsert: Encodable {
 
 struct Child: Identifiable, Codable {
     let id: UUID
+    let familyId: UUID  // ✅ AÑADIDO: Necesario para filtrar por familia
     var name: String
     var birthDate: Date
     var photo: URL?
@@ -172,6 +173,7 @@ struct Child: Identifiable, Codable {
     
     enum CodingKeys: String, CodingKey {
         case id
+        case familyId = "family_id"  // ✅ AÑADIDO
         case name
         case birthDate = "birth_date"
         case photo
@@ -706,6 +708,72 @@ struct NotificationSettings: Codable {
 
 // MARK: - Widget Models
 
+enum DashboardWidgetKind: String, Codable, CaseIterable {
+    // Widgets normales
+    case miniCalendar
+    case todaySummary
+    case balance
+    case upcomingEvents
+    case pendingExpenses
+    case childrenStatus
+    
+    // Widgets de onboarding
+    case onboardingWelcome
+    case onboardingAddChild
+    case onboardingInvitePartner
+    
+    var isOnboarding: Bool {
+        switch self {
+        case .onboardingWelcome, .onboardingAddChild, .onboardingInvitePartner:
+            return true
+        default:
+            return false
+        }
+    }
+    
+    // Metadatos para widgets de onboarding
+    var onboardingMetadata: OnboardingWidgetMetadata? {
+        switch self {
+        case .onboardingWelcome:
+            return OnboardingWidgetMetadata(
+                title: "Welcome to FleyPlanner! 👋",
+                description: "Let's get started setting up your family. We'll guide you through adding your first child and inviting your co-parent.",
+                icon: "hand.wave.fill",
+                actionTitle: "Get Started",
+                gradientColors: [Color.blue, Color.purple]
+            )
+        case .onboardingAddChild:
+            return OnboardingWidgetMetadata(
+                title: "Add Your First Child",
+                description: "Start by adding your child's information to manage their schedule and expenses.",
+                icon: "person.crop.circle.badge.plus",
+                actionTitle: "Add Child",
+                gradientColors: [Color.green, Color.mint]
+            )
+        case .onboardingInvitePartner:
+            return OnboardingWidgetMetadata(
+                title: "Invite Your Co-Parent",
+                description: "Share your family code to collaborate on parenting tasks and expenses.",
+                icon: "person.2.fill",
+                actionTitle: "Share Code",
+                gradientColors: [Color.orange, Color.pink]
+            )
+        default:
+            return nil
+        }
+    }
+}
+
+struct OnboardingWidgetMetadata {
+    let title: String
+    let description: String
+    let icon: String
+    let actionTitle: String
+    let gradientColors: [Color]
+}
+
+// MARK: - Widget Models
+
 struct WidgetChildrenToday: Codable {
     let children: [WidgetChild]
     let lastUpdate: Date
@@ -745,18 +813,6 @@ struct WidgetUpcomingEvents: Codable {
         let date: Date
         let assignedTo: String?
     }
-}
-
-// Codable → persistencia futura (Supabase / local)
-// RawValue → fácil debug + storage
-// CaseIterable → menú “Añadir widget” más adelante
-enum DashboardWidgetKind: String, Codable, CaseIterable {
-    case miniCalendar
-    case todaySummary
-    case balance
-    case upcomingEvents
-    case pendingExpenses
-    case childrenStatus
 }
 
 // MARK: - Decimal Codable Extension
@@ -813,11 +869,25 @@ enum AppError: LocalizedError {
     
     var errorDescription: String? {
         switch self {
-        case .notAuthenticated:  return "Not authenticated"
-        case .incompleteProfile: return "Incomplete profile"
-        case .invalidInviteCode: return "Invalid invite code"
-        case .userNotFound:      return "User not found after registration"
-        case .unknown:           return "An unknown error occurred"
+            case .notAuthenticated:  return "Not authenticated"
+            case .incompleteProfile: return "Incomplete profile"
+            case .invalidInviteCode: return "Invalid invite code"
+            case .userNotFound:      return "User not found after registration"
+            case .unknown:           return "An unknown error occurred"
+        }
+    }
+}
+
+enum DashboardError: LocalizedError {
+    case invalidUser
+    case missingUserOrFamily
+    
+    var errorDescription: String? {
+        switch self {
+            case .invalidUser:
+                return "Invalid user data"
+            case .missingUserOrFamily:
+                return "User or family information is missing"
         }
     }
 }
