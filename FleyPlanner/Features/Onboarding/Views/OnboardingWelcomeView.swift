@@ -32,16 +32,16 @@ struct OnboardingWelcomeView: View {
                             Lines {
                                 Line {
                                     Text("Choose your")
-                                    Icon("circle-user")
+                                    Icon("3d-role")
                                     Text("role")
                                 }
                                 Line {
                                     Text("and start")
-                                    Icon("calendar-days")
+                                    Icon("3d-dashboard")
                                     Text("planning")
                                 }
                                 Line {
-                                    Icon("handshake")
+                                    Icon("3d-users")
                                     Text("together")
                                 }
                             }

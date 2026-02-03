@@ -10,7 +10,7 @@ struct AdaptiveTextLayout<Content: View>: View {
     
     init(
         fontWeight: Font.Weight = .bold,
-        lineSpacing: CGFloat = 4,
+        lineSpacing: CGFloat = 2,
         itemSpacing: CGFloat = 6,
         @ViewBuilder content: () -> Content
     ) {

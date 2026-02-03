@@ -35,18 +35,18 @@ struct CreateFamilyView: View {
                                 Lines {
                                     Line {
                                         Text("Set up your")
-                                        Icon("house-heart")
+                                        Icon("3d-sweethome")
                                         Text("family.")
                                     }
                                     Line {
-                                        Icon("calendar-days")
+                                        Icon("3d-calendar")
                                         Text("Plan")
-                                        Icon("handshake")
+                                        Icon("3d-handshake")
                                         Text("share")
                                     }
                                     Line {
                                         Text("and stay in")
-                                        Icon("repeat")
+                                        Icon("3d-sync")
                                         Text("sync.")
                                     }
                                 }
