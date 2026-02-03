@@ -22,16 +22,16 @@ final class OnboardingState {
     var route: OnboardingRoute = .welcome
     
     var name: String = ""
-    var accountType: AccountType = .adult
+    var accountType: AccountType? = nil
     var familyName: String = ""
     var inviteCode: String = ""
     
     init(appState: AppState) {
         // Usamos el nombre del user ya existente si lo hay
         self.name = appState.currentUser?.name  // Usuario existente
-                ?? appState.appleFullName           // Sign in nuevo
+                ?? appState.appleFullName       // Sign in nuevo
                 ?? ""
-        self.accountType = appState.currentUser?.accountType ?? .adult
+        self.accountType = appState.currentUser?.accountType
     }
     
     var canCreateFamily: Bool {
@@ -62,7 +62,7 @@ extension OnboardingState {
         )
     }
     
-    var accountTypeBinding: Binding<AccountType> {
+    var accountTypeBinding: Binding<AccountType?> {
         Binding(
             get: { self.accountType },
             set: { self.accountType = $0 }

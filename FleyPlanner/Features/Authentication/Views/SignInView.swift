@@ -58,7 +58,7 @@ struct SignInView: View {
                         
                         let newUser = User(
                             id: userId,
-                            name: name.isEmpty ? "Nuevo Usuario" : name,
+                            name: name.isEmpty ? "New User" : name,
                             email: appleCredential.email,
                             appleId: appleCredential.user,
                             accountType: .adult,

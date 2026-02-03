@@ -11,7 +11,7 @@ struct UserBootstrapPayload: Encodable {
     let id: UUID
     let name: String
     let appleId: String
-    let accountType: AccountType
+    let accountType: AccountType?
     
     enum CodingKeys: String, CodingKey {
         case id

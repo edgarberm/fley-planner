@@ -12,7 +12,7 @@ struct User: Identifiable, Codable {
     var name: String
     var email: String? // Opcional para teens
     var appleId: String
-    var accountType: AccountType
+    var accountType: AccountType?
     var avatarURL: URL?
     var addresses: [Address]?
     var isPremium: Bool

@@ -1,28 +1,5 @@
 import SwiftUI
 
-// MARK: - Adaptive Text Layout Component
-
-/// Componente reutilizable que adapta el tamaño de texto e iconos según el ancho disponible
-///
-/// Uso básico:
-/// ```swift
-/// AdaptiveTextLayout {
-///     Line {
-///         Text("Set up your")
-///         Icon("house-heart")
-///         Text("family.")
-///     }
-///     Line {
-///         Text("Plan")
-///         Icon("calendar-days")
-///         Text("share")
-///         Icon("handshake")
-///     }
-///     Line {
-///         Text("and stay in sync")
-///     }
-/// }
-/// ```
 struct AdaptiveTextLayout<Content: View>: View {
     let content: Content
     let fontWeight: Font.Weight

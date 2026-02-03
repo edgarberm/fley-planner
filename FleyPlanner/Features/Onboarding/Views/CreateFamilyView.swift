@@ -24,32 +24,35 @@ struct CreateFamilyView: View {
                         .layoutPriority(-1)
                     
                     VStack(alignment: .leading, spacing: 20) {
-                        // Step indicator
-                        Text("Step 2")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundColor(.secondary)
-                        
-                        // ✨ Usando el componente reutilizable
-                        AdaptiveTextLayout {
-                            Lines {
-                                Line {
-                                    Text("Set up your")
-                                    Icon("house-heart")
-                                    Text("family.")
-                                }
-                                Line {
-                                    Text("Plan")
-                                    Icon("calendar-days")
-                                    Text("share")
-                                    Icon("handshake")
-                                }
-                                Line {
-                                    Text("and stay in sync")
+                        VStack(alignment: .leading) {
+                            Text("Step 1")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                                .foregroundColor(.secondary)
+                            
+                            // ✨ Usando el componente reutilizable
+                            AdaptiveTextLayout {
+                                Lines {
+                                    Line {
+                                        Text("Set up your")
+                                        Icon("house-heart")
+                                        Text("family.")
+                                    }
+                                    Line {
+                                        Icon("calendar-days")
+                                        Text("Plan")
+                                        Icon("handshake")
+                                        Text("share")
+                                    }
+                                    Line {
+                                        Text("and stay in")
+                                        Icon("repeat")
+                                        Text("sync.")
+                                    }
                                 }
                             }
+                            .frame(height: 120) // Altura fija para consistencia
                         }
-                        .frame(height: 120) // Altura fija para consistencia
                         
                         // Input
                         TextField("Nombre de la familia", text: onboarding.familyNameBinding)
@@ -90,7 +93,7 @@ struct CreateFamilyView: View {
                         
                         // Back button
                         Button(action: {
-                            // TODO: Navigate back
+                            onboarding.route = .welcome
                         }) {
                             Text("Back")
                                 .font(.title3.bold())
@@ -103,12 +106,10 @@ struct CreateFamilyView: View {
                     .padding(.bottom, 20)
                 }
                 .frame(minHeight: geometry.size.height)
-                //.padding(.horizontal, 32)
                 .padding(.horizontal, geometry.size.width * 0.06)
             }
             .scrollDisabled(true)
         }
-        .background(Color(uiColor: .systemBackground))
         .alert("Error", isPresented: .constant(currentError != nil)) {
             Button("OK") {
                 currentError = nil
