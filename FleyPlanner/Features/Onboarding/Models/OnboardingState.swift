@@ -34,7 +34,10 @@ final class OnboardingState {
         self.accountType = appState.currentUser?.accountType ?? .adult
     }
     
-    // Helpers
+    var canCreateFamily: Bool {
+        familyName.trimmingCharacters(in: .whitespacesAndNewlines).count >= 2
+    }
+    
     var canFinish: Bool {
         // En el futuro aquí puedes validar estado mínimo
         true

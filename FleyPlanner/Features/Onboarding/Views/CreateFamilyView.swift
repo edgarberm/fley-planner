@@ -15,34 +15,109 @@ struct CreateFamilyView: View {
     @State private var currentError: AppError?
     
     var body: some View {
-        VStack(spacing: 24) {
-            
-            Text("Nueva familia")
-                .font(.largeTitle.bold())
-
-            TextField("Nombre de la familia", text: onboarding.familyNameBinding)
-                .textFieldStyle(.roundedBorder)
-                .disabled(isLoading)
-
-            if let currentError {
-                Text(currentError.localizedDescription)
-                    .foregroundStyle(.red)
-                    .font(.footnote)
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    // Spacer flexible para centrado vertical
+                    Spacer()
+                        .frame(minHeight: 40, maxHeight: .infinity)
+                        .layoutPriority(-1)
+                    
+                    VStack(alignment: .leading, spacing: 20) {
+                        // Step indicator
+                        Text("Step 2")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.secondary)
+                        
+                        // ✨ Usando el componente reutilizable
+                        AdaptiveTextLayout {
+                            Lines {
+                                Line {
+                                    Text("Set up your")
+                                    Icon("house-heart")
+                                    Text("family.")
+                                }
+                                Line {
+                                    Text("Plan")
+                                    Icon("calendar-days")
+                                    Text("share")
+                                    Icon("handshake")
+                                }
+                                Line {
+                                    Text("and stay in sync")
+                                }
+                            }
+                        }
+                        .frame(height: 120) // Altura fija para consistencia
+                        
+                        // Input
+                        TextField("Nombre de la familia", text: onboarding.familyNameBinding)
+                            .padding(.horizontal, 16)
+                            .frame(height: 60)
+                            .background(
+                                RoundedRectangle(cornerRadius: 18)
+                                    .fill(Color(uiColor: .secondarySystemBackground))
+                            )
+                            .font(.title3)
+                            .fontWeight(.medium)
+                            .submitLabel(.done)
+                            .disabled(isLoading)
+                        
+                        // Continue button
+                        Button(action: {
+                            Task { await handleCreateFamily() }
+                        }) {
+                            HStack {
+                                if isLoading {
+                                    ProgressView()
+                                        .tint(.white)
+                                }
+                                Text("Continue")
+                            }
+                            .font(.title3.bold())
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 60)
+                            .background(
+                                onboarding.canCreateFamily && !isLoading
+                                    ? Color.black
+                                    : Color.gray
+                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 18))
+                        }
+                        .disabled(!onboarding.canCreateFamily || isLoading)
+                        
+                        // Back button
+                        Button(action: {
+                            // TODO: Navigate back
+                        }) {
+                            Text("Back")
+                                .font(.title3.bold())
+                                .foregroundColor(.secondary)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 30)
+                        }
+                        .disabled(isLoading)
+                    }
+                    .padding(.bottom, 20)
+                }
+                .frame(minHeight: geometry.size.height)
+                //.padding(.horizontal, 32)
+                .padding(.horizontal, geometry.size.width * 0.06)
             }
-
-            Spacer()
-
-            Button("Crear familia") {
-                Task { await handleCreateFamily() }
+            .scrollDisabled(true)
+        }
+        .background(Color(uiColor: .systemBackground))
+        .alert("Error", isPresented: .constant(currentError != nil)) {
+            Button("OK") {
+                currentError = nil
             }
-            .buttonStyle(.borderedProminent)
-            .disabled(onboarding.familyName.isEmpty || isLoading)
-            
-            if isLoading {
-                ProgressView()
+        } message: {
+            if let error = currentError {
+                Text(error.localizedDescription)
             }
         }
-        .padding()
     }
     
     private func handleCreateFamily() async {
@@ -51,13 +126,11 @@ struct CreateFamilyView: View {
         
         do {
             try await appState.createFamily(name: onboarding.familyName)
-            // Solo navegar DESPUÉS de que todo termine exitosamente
             appState.completeOnboarding()
         } catch let appErr as AppError {
             currentError = appErr
         } catch {
-            print("❌ Error real: \(error)")
-            print("❌ Tipo: \(type(of: error))")
+            print("❌ Error: \(error)")
             currentError = .unknown
         }
         
@@ -67,4 +140,6 @@ struct CreateFamilyView: View {
 
 #Preview {
     CreateFamilyView()
+        .environment(AppState())
+        .environment(OnboardingState(appState: AppState()))
 }

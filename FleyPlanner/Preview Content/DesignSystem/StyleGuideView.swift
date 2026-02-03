@@ -17,10 +17,10 @@ struct StyleGuideView: View {
                     VStack(alignment: .leading, spacing: 16) {
                         SectionHeader(title: "Typography & Hierarchy")
                         Group {
-                            TextItem(label: "Large Title", font: .largeTitle, size: "34pt")
-                            TextItem(label: "Title 1", font: .title, size: "28pt")
-                            TextItem(label: "Title 2", font: .title2, size: "22pt")
-                            TextItem(label: "Title 3", font: .title3, size: "20pt")
+                            TextItem(label: "Large Title", font: .largeTitle, size: "34pt").fontWeight(.bold)
+                            TextItem(label: "Title 1", font: .title, size: "28pt").fontWeight(.semibold)
+                            TextItem(label: "Title 2", font: .title2, size: "22pt").fontWeight(.semibold)
+                            TextItem(label: "Title 3", font: .title3, size: "20pt").fontWeight(.medium)
                             TextItem(label: "Headline", font: .headline, size: "17pt (Bold)")
                             TextItem(label: "Body", font: .body, size: "17pt")
                             TextItem(label: "Callout", font: .callout, size: "16pt")
