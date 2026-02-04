@@ -9,6 +9,7 @@ import SwiftUI
 
 struct DashboardView: View {
     @Environment(AppState.self) private var appState
+
     @State private var viewModel: DashboardViewModel?
     @State private var model = WidgetGridModel()
     @State private var loadTask: Task<Void, Never>?

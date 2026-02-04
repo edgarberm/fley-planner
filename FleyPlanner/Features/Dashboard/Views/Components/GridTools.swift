@@ -9,6 +9,7 @@ import SwiftUI
 
 struct GridTools: View {
     @Environment(WidgetGridModel.self) var model
+    @Environment(AppRouter.self) private var router
     
     var body: some View {
         ZStack {
@@ -16,6 +17,7 @@ struct GridTools: View {
                 Spacer()
                 Button(action: {
                     print("Left tapped")
+                    router.openSettings()
                 }) {
                     Image("settings-2")
                         .resizable()

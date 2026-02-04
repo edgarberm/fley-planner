@@ -20,7 +20,7 @@ struct ContentView: View {
                 case .onboarding:
                     OnboardingContainerView()
                 case .main:
-                    DashboardView()
+                    AppRootView()
             }
         }
         .animation(.spring(), value: appState.currentRoute)

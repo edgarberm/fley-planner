@@ -10,11 +10,13 @@ import SwiftUI
 @main
 struct FleyPlannerApp: App {
     @State private var appState = AppState()
+    @State private var router = AppRouter()
     
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environment(appState)
+                .environment(router)
                 .preferredColorScheme(.light)
                 .task {
                     await appState.initializeSession()
