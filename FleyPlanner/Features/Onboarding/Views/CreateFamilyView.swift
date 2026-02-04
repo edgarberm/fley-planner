@@ -30,28 +30,27 @@ struct CreateFamilyView: View {
                                 .fontWeight(.medium)
                                 .foregroundColor(.secondary)
                             
-                            // ✨ Usando el componente reutilizable
                             AdaptiveTextLayout {
                                 Lines {
                                     Line {
                                         Text("Set up your")
-                                        Icon("3d-sweethome")
+                                        Icon("house-heart")
                                         Text("family.")
                                     }
                                     Line {
-                                        Icon("3d-calendar")
+                                        Icon("calendar")
                                         Text("Plan")
-                                        Icon("3d-handshake")
+                                        Icon("handshake")
                                         Text("share")
                                     }
                                     Line {
                                         Text("and stay in")
-                                        Icon("3d-sync")
+                                        Icon("repeat")
                                         Text("sync.")
                                     }
                                 }
                             }
-                            .frame(height: 120) // Altura fija para consistencia
+                            .frame(height: 108)
                         }
                         
                         // Input

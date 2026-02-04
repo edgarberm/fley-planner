@@ -210,9 +210,29 @@ struct OnboardingWelcomeWidgetView: View {
 
 // MARK: - Preview
 
-#Preview {
-    @Previewable @State var appState = AppState(dataService: SupabaseService.shared)
-    
-    DashboardView()
-        .environment(appState)
-}
+//#Preview {
+//    // 1. Creamos un AppState de prueba
+//    let mockAppState = AppState()
+//    
+//    // 2. Inyectamos datos de prueba para que no sea nil
+//    mockAppState.currentUser = User(
+//        id: UUID(),
+//        name: "Usuario de Prueba",
+//        appleId: "123",
+//        accountType: .adult,
+//        isPremium: false,
+//        notificationSettings: NotificationSettings()
+//    )
+//    
+//    mockAppState.currentFamily = Family(
+//        id: UUID(),
+//        name: "Familia Test",
+//        createdBy: UUID(),
+//        createdAt: Date(),
+//        accessMembers: [],
+//        childrenIds: []
+//    )
+//
+//    DashboardView()
+//        .environment(mockAppState) // 3. Pasamos el estado mockeado
+//}

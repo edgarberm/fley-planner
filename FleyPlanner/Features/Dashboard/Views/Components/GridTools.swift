@@ -14,27 +14,15 @@ struct GridTools: View {
         ZStack {
             HStack {
                 Spacer()
-                Button(action: { print("Left tapped") }) {
+                Button(action: {
+                    print("Left tapped")
+                }) {
                     Image("settings-2")
                         .resizable()
                         .scaledToFit()
                         .frame(width: 24, height: 24)
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(Color.black)
                 }
-                
-//                Spacer()
-                
-//                Button(action: {
-//                    withAnimation(.easeInOut) {
-//                        model.addMenuVisible = true
-//                    }
-//                }) {
-//                    Image("plus-circle")
-//                        .resizable()
-//                        .scaledToFit()
-//                        .frame(width: 24, height: 24)
-//                        .foregroundStyle(.primary)
-//                }
             }
             .padding(.top, 40)
             .padding(.bottom, 6)

@@ -23,7 +23,7 @@ struct OnboardingWelcomeView: View {
                 
                 VStack(alignment: .leading, spacing: 20) {
                     VStack(alignment: .leading) {
-                        Text("Welcome \(onboarding.name.split(separator: " ").first ?? "")!")
+                        Text("Welcome \(onboarding.name.split(separator: " ").first ?? "Edgar")!")
                             .font(.subheadline)
                             .fontWeight(.semibold)
                             .foregroundColor(.black)
@@ -32,21 +32,21 @@ struct OnboardingWelcomeView: View {
                             Lines {
                                 Line {
                                     Text("Choose your")
-                                    Icon("3d-role")
+                                    Icon("circle-user")
                                     Text("role")
                                 }
                                 Line {
                                     Text("and start")
-                                    Icon("3d-dashboard")
+                                    Icon("layout-dashboard")
                                     Text("planning")
                                 }
                                 Line {
-                                    Icon("3d-users")
+                                    Icon("users")
                                     Text("together")
                                 }
                             }
                         }
-                        .frame(height: 120)
+                        .frame(height: 108)
                     }
                     
                     SelectableCard(

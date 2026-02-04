@@ -55,7 +55,7 @@ struct AdaptiveTextLayout<Content: View>: View {
         case 330..<380:    // iPhone 14/15/16 Pro
             return AdaptiveTextConfig(
                 fontSize: 32,
-                iconSize: 36,
+                iconSize: 38,
                 itemSpacing: itemSpacing,
                 lineSpacing: lineSpacing,
                 fontWeight: fontWeight
@@ -137,6 +137,7 @@ struct Icon: View {
         Image(name)
             .resizable()
             .scaledToFit()
+            .foregroundColor(Color.black.opacity(0.8))
             .frame(width: config.iconSize, height: config.iconSize)
             .baselineOffset(-2)
     }

@@ -25,7 +25,8 @@ struct SignInView: View {
                 }
             }
             .signInWithAppleButtonStyle(.black)
-            .frame(height: 50)
+            .frame(height: 60)
+            .clipShape(RoundedRectangle(cornerRadius: 18))
             .padding()
         }
     }
@@ -77,4 +78,9 @@ struct SignInView: View {
                 print("❌ Apple Error: \(error.localizedDescription)")
         }
     }
+}
+
+#Preview {
+    SignInView()
+        .environment(AppState())
 }
