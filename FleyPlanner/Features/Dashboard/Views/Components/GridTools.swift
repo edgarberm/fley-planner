@@ -28,7 +28,7 @@ struct GridTools: View {
             }
             .padding(.top, 40)
             .padding(.bottom, 6)
-            .padding(.horizontal, 40)
+            .padding(.horizontal, 36)
         }
     }
 }

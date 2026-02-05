@@ -10,8 +10,8 @@ import Observation
 
 // MARK: - Constants
 
-let PADDING: CGFloat = 6.0
-let SPACING: CGFloat = 16.0
+let PADDING: CGFloat = 8.0
+let SPACING: CGFloat = 12.0
 let RADIUS: CGFloat = 22.0
 let groupingThreshold: CGFloat = 12
 
