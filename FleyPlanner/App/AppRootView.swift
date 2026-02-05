@@ -13,18 +13,23 @@ struct AppRootView: View {
     @Environment(AppState.self) private var appState
     @Environment(AppRouter.self) private var router
     
-    
     var body: some View {
         ZStack {
-            // Dashboard (siempre visible)
             DashboardView()
-            
-            // Settings overlay
-            RouterFullScreenCover(isPresented: router.showSettings) {
-                SettingsView()
-            }
+                .scrollContentBackground(.hidden)
+        }
+        .fullScreenSheet(ignoreSafeArea: true, isPresented: Bindable(router).showSettings) { safeArea in
+            overlayContent()
+                .safeAreaPadding(.top, safeArea.top)
+        } background: {
+            defaultBackground()
         }
         .animation(.spring(response: 0.35, dampingFraction: 0.85), value: router.showSettings)
+    }
+    
+    @ViewBuilder
+    func overlayContent() -> some View {
+        SettingsView()
     }
 }
 
@@ -32,15 +37,19 @@ struct AppRootView: View {
 
 struct SettingsView: View {
     var body: some View {
-        VStack(spacing: 20) {
-            Text("Settings")
-                .font(.largeTitle.bold())
-            
-            
-            ForEach(0..<60) { i in
-                Text("Elemento \(i)")
+        ScrollView(.vertical) {
+            VStack {
+                Text("Settings")
+                    .font(.largeTitle.bold())
+                    .listRowBackground(Color.clear)
+                
+                ForEach(0..<100) { i in
+                    Text("Elemento \(i)")
+                        .listRowBackground(Color.clear)
+                }
             }
-            
+            .frame(maxWidth: .infinity)
         }
+        .scrollContentBackground(.hidden)
     }
 }

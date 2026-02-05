@@ -12,16 +12,17 @@ struct Child: Identifiable, Codable {
     let familyId: UUID  // ✅ AÑADIDO: Necesario para filtrar por familia
     var name: String
     var birthDate: Date
-    var photo: URL?
+    var avatarURL: URL?
     var custodyConfig: CustodyConfiguration
     var medicalInfo: MedicalInfo
+    // TODO: addresses. From child bond
     
     enum CodingKeys: String, CodingKey {
         case id
         case familyId = "family_id"  // ✅ AÑADIDO
         case name
         case birthDate = "birth_date"
-        case photo
+        case avatarURL = "avater_url"
         case custodyConfig = "custody_config"
         case medicalInfo = "medical_info"
     }
