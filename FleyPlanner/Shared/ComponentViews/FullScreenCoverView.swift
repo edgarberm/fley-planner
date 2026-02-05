@@ -46,7 +46,7 @@ struct RouterFullScreenCover<Content: View>: View {
                             Capsule()
                                 .fill(Color.gray.opacity(0.5))
                                 .frame(width: 40, height: 6)
-                                .padding(.bottom, 6)
+                                .padding(.bottom, 12)
                         }
                         .frame(maxWidth: .infinity, maxHeight: 76, alignment: .bottom)
                         .background {
@@ -54,7 +54,7 @@ struct RouterFullScreenCover<Content: View>: View {
                                 cornerRadii: .init(topLeading: 30, topTrailing: 30),
                                 style: .continuous
                             )
-                            .fill(.clear)
+                            .fill(Color.white.opacity(0.01))
                             .onLongPressGesture(minimumDuration: .infinity) {
                             } onPressingChanged: { tapping in
                                 tappingOnHandler = tapping
