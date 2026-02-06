@@ -12,16 +12,16 @@ import Observation
 final class DashboardViewModel {
     private let dataService: DataService
     private let currentUser: User
-    private let familyId: UUID
+    private let family: Family
     
     var context: DashboardContext?
     var isLoading = false
     var error: Error?
     
-    init(dataService: DataService, currentUser: User, familyId: UUID) {
+    init(dataService: DataService, currentUser: User, family: Family) {
         self.dataService = dataService
         self.currentUser = currentUser
-        self.familyId = familyId
+        self.family = family
         print("📊 DashboardViewModel created for user: \(currentUser.name)")
     }
     
@@ -56,11 +56,11 @@ final class DashboardViewModel {
         
         print("🔄 Loading dashboard data...")
         print("   User ID: \(currentUser.id)")
-        print("   Family ID: \(familyId)")
+        print("   Family ID: \(family.id)")
         
         // Cargar todo en paralelo
-        async let children = dataService.getChildren(for: familyId)
-        async let members = dataService.getFamilyMembers(familyId: familyId)
+        async let children = dataService.getChildren(for: family.id)
+        async let members = dataService.getFamilyMembers(familyId: family.id)
         async let bonds = dataService.getChildBonds(for: currentUser.id)
         async let events = dataService.getEvents(for: currentUser.id)
         async let expenses = dataService.getExpenses(for: currentUser.id)
@@ -116,7 +116,10 @@ final class DashboardViewModel {
         guard let context else { return true }
         
         // Si no hay niños, definitivamente necesita onboarding
-        if context.activeChildren.isEmpty {
+        if self.currentUser.profileCompleted == false,
+           self.family.accessMembers.count == 1,
+           context.currentUser.avatarURL == nil,
+           context.activeChildren.isEmpty {
             print("ℹ️ Needs onboarding: no children")
             return true
         }

@@ -16,6 +16,7 @@ struct User: Identifiable, Codable {
     var avatarURL: URL?
     var addresses: [Address]?
     var isPremium: Bool
+    var profileCompleted: Bool
     var notificationSettings: NotificationSettings
     
     enum CodingKeys: String, CodingKey {
@@ -27,6 +28,7 @@ struct User: Identifiable, Codable {
         case avatarURL = "avater_url"
         case addresses
         case isPremium = "is_premium"
+        case profileCompleted = "profile_completed"
         case notificationSettings = "notification_settings"
     }
 }

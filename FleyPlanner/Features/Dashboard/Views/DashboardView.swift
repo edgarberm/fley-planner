@@ -98,7 +98,7 @@ struct DashboardView: View {
             let vm = DashboardViewModel(
                 dataService: appState.dataService,
                 currentUser: user,
-                familyId: family.id
+                family: family
             )
             
             // Configurar callbacks del grid model ANTES de asignar viewModel
