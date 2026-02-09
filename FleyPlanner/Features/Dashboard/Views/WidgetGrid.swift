@@ -12,8 +12,11 @@ struct WidgetGrid: View {
     
     @State private var widgets: [Widget] = []
     @State private var hapticsTrigger: Bool = false
-    
     @State private var shadowRadius: CGFloat = 0
+    
+    // ✅ AÑADIR: Throttle para evitar animaciones excesivas
+    @State private var lastReorderTime: Date = .distantPast
+    private let reorderThrottle: TimeInterval = 0.05  // 50ms entre reorders
     
     var body: some View {
         GeometryReader { geometry in
@@ -83,72 +86,66 @@ struct WidgetGrid: View {
             .sequenced(before: DragGesture(minimumDistance: 0, coordinateSpace: .named("scroll")))
             .onChanged { value in
                 switch value {
-                    case .second(let status, let dragValue):
-                        if status {
-                            model.isDraggingWidget = true
-                            
-                            if model.selectedWidget == nil {
-                                if let position = positions[widget.id] {
-                                    model.selectedWidget = widget
-                                    model.selectedWidgetPosition = position
-                                    model.selectedWidgetScale = 1.04
-                                }
-                                hapticsTrigger.toggle()
+                case .second(let status, let dragValue):
+                    if status {
+                        model.isDraggingWidget = true
+                        
+                        if model.selectedWidget == nil {
+                            if let position = positions[widget.id] {
+                                model.selectedWidget = widget
+                                model.selectedWidgetPosition = position
+                                model.selectedWidgetScale = 1.04
                             }
+                            hapticsTrigger.toggle()
+                        }
+                        
+                        if let dragValue = dragValue, model.selectedWidget?.id == widget.id {
+                            model.updateDragOffset(dragValue.translation)
                             
-                            if let dragValue = dragValue, model.selectedWidget?.id == widget.id {
-                                model.updateDragOffset(dragValue.translation)
+                            let result = reorderedWidgetsIfNeeded(
+                                dragLocation: dragValue.location,
+                                geometry: geometry,
+                                positions: positions,
+                                widgets: widgets,
+                                selectedWidget: model.selectedWidget!,
+                                scrollOffset: model.scrollOffset,
+                                widgetTargetForGrouping: model.widgetTargetForGrouping
+                            )
+                            
+                            // ✅ CAMBIO: Throttle de reorders para evitar animaciones excesivas
+                            if let updatedWidgets = result.widgetList {
+                                let now = Date()
+                                let timeSinceLastReorder = now.timeIntervalSince(lastReorderTime)
                                 
-                                let result = reorderedWidgetsIfNeeded(
-                                    dragLocation: dragValue.location,
-                                    geometry: geometry,
-                                    positions: positions,
-                                    widgets: widgets,
-                                    selectedWidget: model.selectedWidget!,
-                                    scrollOffset: model.scrollOffset,
-                                    widgetTargetForGrouping: model.widgetTargetForGrouping
-                                )
-                                
-                                if let updatedWidgets = result.widgetList {
-                                    withAnimation(.snappy(duration: 0.35, extraBounce: 0)) {
+                                if timeSinceLastReorder >= reorderThrottle {
+                                    lastReorderTime = now
+                                    withAnimation(.snappy(duration: 0.25, extraBounce: 0)) {
                                         widgets = updatedWidgets
                                     }
+                                } else {
+                                    // Update sin animación si es demasiado pronto
+                                    widgets = updatedWidgets
                                 }
-                                
-                                // TODO: - Esto crea grupos de widgets
-                                //model.widgetTargetForGrouping = result.groupingTarget
                             }
                         }
-                    default:
-                        break
+                    }
+                default:
+                    break
                 }
             }
             .onEnded { _ in
+                // ✅ Reset throttle
+                lastReorderTime = .distantPast
+                
                 var updated = widgets
                 var selectedWidgetPosition = model.selectedWidgetPosition
                 
                 if let targetID = model.widgetTargetForGrouping,
                    let dragged = model.selectedWidget,
                    let targetIndex = updated.firstIndex(where: { $0.id == targetID }),
-                   // draggedIndex
                    let _ = updated.firstIndex(where: { $0.id == dragged.id }) {
                     
-                    // Sacar los dos widgets
                     let targetWidget = updated.remove(at: targetIndex)
-                    
-                    // TODO: - Grouping gidgets
-                    // Ajustar índice si el arrastrado estaba antes del target
-                    // let draggedIndexAdjusted = targetIndex > draggedIndex ? draggedIndex : draggedIndex - 1
-                    
-                    //let draggedWidget = updated.remove(at: draggedIndexAdjusted)
-                    
-                    // Crear grupo
-                    //                    let group = WidgetGroup(widgets: [draggedWidget, targetWidget])
-                    //                    let groupWidget = Widget(id: targetWidget.id, size: .medium, view: .group(group))
-                    
-                    // Insertar en posición del target original
-                    //updated.insert(groupWidget, at: targetIndex)
-                    
                     selectedWidgetPosition = positions[targetWidget.id] ?? .zero
                     
                     let packed = compactWidgets(updated)
@@ -163,7 +160,6 @@ struct WidgetGrid: View {
                 } else {
                     selectedWidgetPosition = positions[widget.id] ?? .zero
                     
-                    // Compactar normal si no hay agrupación
                     let packed = compactWidgets(widgets)
                     if packed.map(\.id) != widgets.map(\.id) {
                         withAnimation(.snappy(duration: 0.25, extraBounce: 0)) {

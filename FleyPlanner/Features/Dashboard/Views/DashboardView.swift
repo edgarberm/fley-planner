@@ -133,75 +133,75 @@ struct DashboardView: View {
         .environment(appState)
 }
 
-struct OnboardingWidgetView: View {
-    let metadata: OnboardingWidgetMetadata
-    let action: (() -> Void)?
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            // Content
-            VStack(alignment: .leading, spacing: 6) {
-                Text(metadata.title)
-                    .font(.headline)
-                    .foregroundStyle(.primary)
-                
-                Text(metadata.description)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .lineLimit(3)
-            }
-            
-            // Button
-            Button(action: {
-                action?()
-            }) {
-                HStack {
-                    Text(metadata.actionTitle)
-                        .font(.subheadline.weight(.semibold))
-                    
-                    Image(systemName: "arrow.right")
-                        .font(.subheadline)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 6)
-                .background(
-                    LinearGradient(
-                        colors: metadata.gradientColors,
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                )
-                .foregroundStyle(.white)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-            }
-        }
-        .padding()
-    }
-}
-
-// MARK: - Welcome Widget (Wide)
-
-struct OnboardingWelcomeWidgetView: View {
-    let metadata: OnboardingWidgetMetadata
-    
-    var body: some View {
-        VStack(spacing: 6) {
-            Text(metadata.title)
-                .font(.title2.bold())
-                .foregroundStyle(.primary)
-                .multilineTextAlignment(.center)
-            
-            Text(metadata.description)
-                .font(.body)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding()
-        
-    }
-}
+//struct OnboardingWidgetView: View {
+//    let metadata: OnboardingWidgetMetadata
+//    let action: (() -> Void)?
+//    
+//    var body: some View {
+//        VStack(alignment: .leading, spacing: 6) {
+//            // Content
+//            VStack(alignment: .leading, spacing: 6) {
+//                Text(metadata.title)
+//                    .font(.headline)
+//                    .foregroundStyle(.primary)
+//                
+//                Text(metadata.description)
+//                    .font(.subheadline)
+//                    .foregroundStyle(.secondary)
+//                    .fixedSize(horizontal: false, vertical: true)
+//                    .lineLimit(3)
+//            }
+//            
+//            // Button
+//            Button(action: {
+//                action?()
+//            }) {
+//                HStack {
+//                    Text(metadata.actionTitle)
+//                        .font(.subheadline.weight(.semibold))
+//                    
+//                    Image(systemName: "arrow.right")
+//                        .font(.subheadline)
+//                }
+//                .frame(maxWidth: .infinity)
+//                .padding(.vertical, 6)
+//                .background(
+//                    LinearGradient(
+//                        colors: metadata.gradientColors,
+//                        startPoint: .leading,
+//                        endPoint: .trailing
+//                    )
+//                )
+//                .foregroundStyle(.white)
+//                .clipShape(RoundedRectangle(cornerRadius: 12))
+//            }
+//        }
+//        .padding()
+//    }
+//}
+//
+//// MARK: - Welcome Widget (Wide)
+//
+//struct OnboardingWelcomeWidgetView: View {
+//    let metadata: OnboardingWidgetMetadata
+//    
+//    var body: some View {
+//        VStack(spacing: 6) {
+//            Text(metadata.title)
+//                .font(.title2.bold())
+//                .foregroundStyle(.primary)
+//                .multilineTextAlignment(.center)
+//            
+//            Text(metadata.description)
+//                .font(.body)
+//                .foregroundStyle(.secondary)
+//                .multilineTextAlignment(.center)
+//                .fixedSize(horizontal: false, vertical: true)
+//        }
+//        .padding()
+//        
+//    }
+//}
 
 
 // MARK: - Preview
