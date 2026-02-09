@@ -22,29 +22,20 @@ final class DashboardViewModel {
         self.dataService = dataService
         self.currentUser = currentUser
         self.family = family
-        print("📊 DashboardViewModel created for user: \(currentUser.name)")
     }
     
-    deinit {
-        print("🗑️ DashboardViewModel deallocated")
-    }
+    // MARK: - Load Data
     
     @MainActor
     func load() async throws {
-        print("🔄 DashboardViewModel.load() started")
         isLoading = true
-        defer {
-            isLoading = false
-            print("✅ DashboardViewModel.load() completed (isLoading = false)")
-        }
+        defer { isLoading = false }
         
         do {
             context = try await loadContext()
             error = nil
-            print("✅ Dashboard context loaded successfully")
         } catch {
             self.error = error
-            print("❌ Error loading dashboard context: \(error)")
             throw error
         }
     }
@@ -54,76 +45,34 @@ final class DashboardViewModel {
             throw DashboardError.invalidUser
         }
         
-        print("🔄 Loading dashboard data...")
-        print("   User ID: \(currentUser.id)")
-        print("   Family ID: \(family.id)")
-        
-        // Cargar todo en paralelo
+        // Carga paralela de todos los datos
         async let children = dataService.getChildren(for: family.id)
         async let members = dataService.getFamilyMembers(familyId: family.id)
         async let bonds = dataService.getChildBonds(for: currentUser.id)
         async let events = dataService.getEvents(for: currentUser.id)
         async let expenses = dataService.getExpenses(for: currentUser.id)
         
-        print("⏳ Waiting for all queries to complete...")
-        
-        let results = await (
-            children: children,
-            members: members,
-            bonds: bonds,
-            events: events,
-            expenses: expenses
-        )
-        
-        print("✅ All queries completed successfully")
-        print("   Children: \(results.children.count)")
-        print("   Members: \(results.members.count)")
-        print("   Bonds: \(results.bonds.count)")
-        print("   Events: \(results.events.count)")
-        print("   Expenses: \(results.expenses.count)")
+        let (loadedChildren, loadedMembers, loadedBonds, loadedEvents, loadedExpenses) =
+            await (children, members, bonds, events, expenses)
         
         return DashboardContext.generate(
             for: currentUser,
-            children: results.children,
-            bonds: results.bonds,
-            events: results.events,
-            expenses: results.expenses,
-            allUsers: results.members
+            children: loadedChildren,
+            bonds: loadedBonds,
+            events: loadedEvents,
+            expenses: loadedExpenses,
+            allUsers: loadedMembers
         )
     }
     
+    // MARK: - Refresh
+    
     @MainActor
-    func bindWidgets(_ gridModel: WidgetGridModel) async {
-        guard let context else {
-            print("⚠️ Cannot bind widgets: context is nil")
-            return
+    func refresh() async {
+        do {
+            try await load()
+        } catch {
+            // Error ya está en self.error
         }
-        
-        // Si necesita onboarding, configurar widgets especiales
-        if needsOnboarding {
-            print("🎯 Setting up onboarding widgets")
-            gridModel.setupOnboardingWidgets()
-        } else {
-            print("✅ Setting up regular widgets with data")
-            gridModel.refreshWidgetViews(context: context)
-        }
-    }
-    
-    // MARK: - Onboarding Logic
-    
-    /// Determina si el usuario necesita ver widgets de onboarding
-    var needsOnboarding: Bool {
-        guard let context else { return true }
-        
-        // Si no hay niños, definitivamente necesita onboarding
-        if self.currentUser.profileCompleted == false,
-           self.family.accessMembers.count == 1,
-           context.currentUser.avatarURL == nil,
-           context.activeChildren.isEmpty {
-            print("ℹ️ Needs onboarding: no children")
-            return true
-        }
-        
-        return false
     }
 }

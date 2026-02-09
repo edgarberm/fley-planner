@@ -14,10 +14,10 @@ struct User: Identifiable, Codable {
     var appleId: String
     var accountType: AccountType?
     var avatarURL: URL?
-    var addresses: [Address]?
     var isPremium: Bool
-    var profileCompleted: Bool
+    var contactInfo: ContactInfo? // TODO: add to database
     var notificationSettings: NotificationSettings
+    var profileCompleted: Bool
     
     enum CodingKeys: String, CodingKey {
         case id
@@ -26,10 +26,21 @@ struct User: Identifiable, Codable {
         case appleId = "apple_id"
         case accountType = "account_type"
         case avatarURL = "avater_url"
-        case addresses
         case isPremium = "is_premium"
-        case profileCompleted = "profile_completed"
+        case contactInfo = "contact_info"
         case notificationSettings = "notification_settings"
+        case profileCompleted = "profile_completed"
     }
 }
 
+struct ContactInfo: Identifiable, Codable {
+    let id: UUID
+    var telephone: String
+    var addresses: [Address]?
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case telephone
+        case addresses
+    }
+}

@@ -120,40 +120,115 @@ extension WidgetGridModel {
         }
     }
     
-    /// Crea widgets de onboarding cuando no hay datos
-    func setupOnboardingWidgets() {
-        print("🎯 Setting up onboarding widgets")
+    /// Configura widgets basándose en el estado de onboarding
+    func setupWidgets(context: DashboardContext, user: User, family: Family) {
+        let helper = DashboardOnboardingHelper(
+            context: context,
+            user: user,
+            family: family
+        )
         
-        widgets = [
+        if helper.shouldShowOnboardingWidgets {
+            // Mix de widgets de onboarding + normales
+            setupMixedWidgets(helper: helper, context: context)
+        } else {
+            // Solo widgets normales
+            setupNormalWidgets(context: context)
+        }
+    }
+    
+    /// Modo mixto: onboarding + normales
+    private func setupMixedWidgets(helper: DashboardOnboardingHelper, context: DashboardContext) {
+        var allWidgets: [Widget] = []
+        
+        // 1. Widgets de onboarding (prioridad alta)
+        let onboardingKinds = helper.widgetsToShow()
+        
+        // ✨ LOG TEMPORAL
+        print("🎯 Onboarding widgets to show: \(onboardingKinds.map { $0.rawValue })")
+        
+        for kind in onboardingKinds.prefix(3) {
+            allWidgets.append(
+                Widget(
+                    size: kind.defaultSize,
+                    kind: kind,
+                    view: .view(WidgetViewFactory.onboardingView(for: kind))
+                )
+            )
+        }
+        
+        // 2. Widgets normales (si hay datos)
+        if !context.activeChildren.isEmpty {
+            allWidgets.append(contentsOf: createNormalWidgets(context: context))
+        }
+        
+        widgets = allWidgets
+    }
+    
+    /// Solo widgets normales (usuario completo)
+    private func setupNormalWidgets(context: DashboardContext) {
+        widgets = createNormalWidgets(context: context)
+    }
+    
+    /// Crea widgets normales con datos reales
+    private func createNormalWidgets(context: DashboardContext) -> [Widget] {
+        [
             Widget(
                 size: .wide,
-                kind: .onboardingWelcome,
-                view: .view(AnyView(EmptyView()))
+                kind: .todaySummary,
+                view: .view(WidgetViewFactory.view(
+                    for: Widget(size: .wide, kind: .todaySummary, view: .view(AnyView(EmptyView()))),
+                    context: context
+                ))
             ),
             Widget(
                 size: .medium,
-                kind: .onboardingAddChild,
-                view: .view(AnyView(EmptyView())),
-                onboardingAction: { [weak self] in
-                    self?.onAddChildTapped?()
-                }
+                kind: .miniCalendar,
+                view: .view(WidgetViewFactory.view(
+                    for: Widget(size: .medium, kind: .miniCalendar, view: .view(AnyView(EmptyView()))),
+                    context: context
+                ))
             ),
             Widget(
                 size: .medium,
-                kind: .onboardingInvitePartner,
-                view: .view(AnyView(EmptyView())),
-                onboardingAction: { [weak self] in
-                    self?.onInvitePartnerTapped?()
-                }
+                kind: .balance,
+                view: .view(WidgetViewFactory.view(
+                    for: Widget(size: .medium, kind: .balance, view: .view(AnyView(EmptyView()))),
+                    context: context
+                ))
+            ),
+            Widget(
+                size: .wide,
+                kind: .upcomingEvents,
+                view: .view(WidgetViewFactory.view(
+                    for: Widget(size: .wide, kind: .upcomingEvents, view: .view(AnyView(EmptyView()))),
+                    context: context
+                ))
+            ),
+            Widget(
+                size: .wide,
+                kind: .pendingExpenses,
+                view: .view(WidgetViewFactory.view(
+                    for: Widget(size: .wide, kind: .pendingExpenses, view: .view(AnyView(EmptyView()))),
+                    context: context
+                ))
+            ),
+            Widget(
+                size: .medium,
+                kind: .childrenStatus,
+                view: .view(WidgetViewFactory.view(
+                    for: Widget(size: .medium, kind: .childrenStatus, view: .view(AnyView(EmptyView()))),
+                    context: context
+                ))
             )
         ]
-        
-        // Renderizar las vistas
-        widgets = widgets.map { widget in
-            var w = widget
-            w.view = .view(WidgetViewFactory.onboardingView(for: w))
-            return w
-        }
+    }
+    
+    // DEPRECATED: Eliminar cuando estemos seguros de que no se usa
+    @available(*, deprecated, message: "Use setupWidgets(context:user:family:) instead")
+    func setupOnboardingWidgets() {
+        print("⚠️ setupOnboardingWidgets() is deprecated")
+        widgets = []
     }
 }
 

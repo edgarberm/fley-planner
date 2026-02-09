@@ -7,75 +7,90 @@
 
 import SwiftUI
 import AuthenticationServices
-import Supabase
 
 struct SignInView: View {
     @Environment(AppState.self) private var appState
+    @State private var isLoading = false
+    @State private var errorMessage: String?
     
     var body: some View {
         VStack(spacing: 20) {
-            Text("FleyPlanner")
-                .font(.largeTitle.bold())
+            Spacer()
             
-            SignInWithAppleButton(.continue) { request in
-                request.requestedScopes = [.email, .fullName]
-            } onCompletion: { result in
-                Task {
-                    await handleAppleResult(result)
-                }
+            // Logo/Title
+            VStack(spacing: 12) {
+                Image(systemName: "calendar.badge.clock")
+                    .font(.system(size: 80))
+                    .foregroundStyle(.blue)
+                
+                Text("FleyPlanner")
+                    .font(.largeTitle.bold())
+                
+                Text("Organize your family life")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
             }
-            .signInWithAppleButtonStyle(.black)
-            .frame(height: 60)
-            .clipShape(RoundedRectangle(cornerRadius: 18))
-            .padding()
+            
+            Spacer()
+            
+            // Error message
+            if let errorMessage {
+                Text(errorMessage)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+            }
+            
+            // Sign In Button
+            if isLoading {
+                ProgressView()
+                    .frame(height: 60)
+            } else {
+                SignInWithAppleButton(.continue) { request in
+                    request.requestedScopes = [.email, .fullName]
+                } onCompletion: { result in
+                    Task {
+                        await handleAppleResult(result)
+                    }
+                }
+                .signInWithAppleButtonStyle(.black)
+                .frame(height: 60)
+                .clipShape(RoundedRectangle(cornerRadius: 18))
+                .padding(.horizontal)
+            }
+            
+            Spacer()
         }
     }
     
     private func handleAppleResult(_ result: Result<ASAuthorization, Error>) async {
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+        
         switch result {
-            case .success(let auth):
-                guard let appleCredential = auth.credential as? ASAuthorizationAppleIDCredential,
-                      let idToken = appleCredential.identityToken.flatMap({ String(data: $0, encoding: .utf8) }) else { return }
-                
-                do {
-                    // 1. Auth puro
-                    let userId = try await appState.dataService.signInWithApple(idToken: idToken, nonce: nil)
-                    
-                    // 2. Intentamos ver si ya existe para no machacar el nombre con "Nuevo Usuario"
-                    let existingUser = await appState.dataService.getUser(id: userId)
-                    
-                    if let existingUser {
-                        // El usuario ya existe, lo cargamos y vamos a Main o Onboarding
-                        await appState.completeRegistration(user: existingUser)
-                    } else {
-                        // Es NUEVO: Capturamos lo que Apple nos dé ahora o nunca
-                        let fullName = appleCredential.fullName
-                        let name = [fullName?.givenName, fullName?.familyName]
-                            .compactMap { $0 }
-                            .joined(separator: " ")
-                        
-                        // Guardamos el nombre en AppState antes de avanzar
-                        appState.appleFullName = name.isEmpty ? nil : name
-                        
-                        let newUser = User(
-                            id: userId,
-                            name: name.isEmpty ? "New User" : name,
-                            email: appleCredential.email,
-                            appleId: appleCredential.user,
-                            accountType: .adult,
-                            isPremium: false,
-                            notificationSettings: .default
-                        )
-                        
-                        await appState.completeRegistration(user: newUser)
-                    }
-                    
-                } catch {
-                    print("❌ Error en el flujo de entrada: \(error)")
-                }
-                
-            case .failure(let error):
-                print("❌ Apple Error: \(error.localizedDescription)")
+        case .success(let auth):
+            guard let credential = auth.credential as? ASAuthorizationAppleIDCredential,
+                  let idToken = credential.identityToken.flatMap({ String(data: $0, encoding: .utf8) })
+            else {
+                errorMessage = "Invalid Apple credential"
+                return
+            }
+            
+            do {
+                try await appState.signInWithApple(credential: credential, idToken: idToken)
+            } catch {
+                errorMessage = "Sign in failed: \(error.localizedDescription)"
+            }
+            
+        case .failure(let error):
+            if let authError = error as? ASAuthorizationError,
+               authError.code == .canceled {
+                // Usuario canceló, no mostrar error
+                return
+            }
+            errorMessage = "Sign in failed: \(error.localizedDescription)"
         }
     }
 }

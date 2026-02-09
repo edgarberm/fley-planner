@@ -26,7 +26,7 @@ struct DashboardView: View {
                 } else if let error = viewModel.error {
                     errorView(error)
                 } else {
-                    // Siempre mostrar WidgetGrid, sin importar si es onboarding o no
+                    // Siempre mostrar WidgetGrid
                     WidgetGrid()
                         .environment(model)
                 }
@@ -101,15 +101,6 @@ struct DashboardView: View {
                 family: family
             )
             
-            // Configurar callbacks del grid model ANTES de asignar viewModel
-            model.onAddChildTapped = {
-                showAddChild = true
-            }
-            
-            model.onInvitePartnerTapped = {
-                showInvitePartner = true
-            }
-            
             // Asignar viewModel
             viewModel = vm
             
@@ -117,13 +108,17 @@ struct DashboardView: View {
             do {
                 try await vm.load()
                 
-                // Vincular widgets (esto decidirá si mostrar onboarding o widgets normales)
-                await vm.bindWidgets(model)
-                
-                print("✅ Dashboard initialized successfully")
-                
+                // ✨ Configurar widgets usando el nuevo sistema
+                if let context = vm.context {
+                    print("✅ Context loaded, setting up widgets...")
+                    model.setupWidgets(context: context, user: user, family: family)
+                    print("✅ Widgets setup complete. Total: \(model.widgets.count)")
+                } else {
+                    print("⚠️ No context available after load")
+                }
             } catch {
-                print("❌ Dashboard initialization failed: \(error)")
+                print("❌ Dashboard load failed: \(error)")
+                // El error ya está en vm.error, así que la UI lo mostrará
             }
         }
     }
