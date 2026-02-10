@@ -181,6 +181,11 @@ struct WidgetGrid: View {
                     model.selectedWidget = nil
                     model.selectedWidgetPosition = .zero
                     model.isDraggingWidget = false
+                    
+                    // Guardar posiciones en Supabase
+                    Task {
+                        await model.saveWidgetPositions()
+                    }
                 }
             }
     }

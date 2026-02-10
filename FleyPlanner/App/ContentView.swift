@@ -24,5 +24,8 @@ struct ContentView: View {
             }
         }
         .animation(.spring(), value: appState.currentRoute)
+        .onAppear {
+            print("Init ContentView: \(appState.currentRoute)")
+        }
     }
 }

@@ -16,21 +16,27 @@ let groupingThreshold: CGFloat = 12
 
 // MARK: - Widget Structure
 
-enum WidgetSize {
+enum WidgetSize: String, Codable {
     case small   // 1x1
     case wide    // 2x1
 }
 
-enum WidgetKind: String {
+enum WidgetKind: String, Codable {
     case today
     case calendar
     case children
 }
 
 struct Widget: Identifiable, Hashable {
-    var id: UUID = UUID()
+    var id: UUID
     var size: WidgetSize
     var kind: WidgetKind
+    
+    init(id: UUID = UUID(), size: WidgetSize, kind: WidgetKind) {
+        self.id = id
+        self.size = size
+        self.kind = kind
+    }
     
     static func == (lhs: Widget, rhs: Widget) -> Bool {
         lhs.id == rhs.id

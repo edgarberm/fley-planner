@@ -9,7 +9,6 @@ import Foundation
 
 enum AppError: LocalizedError {
     case notAuthenticated
-    case incompleteProfile
     case invalidInviteCode
     case userNotFound
     case noFamily
@@ -18,7 +17,6 @@ enum AppError: LocalizedError {
     var errorDescription: String? {
         switch self {
             case .notAuthenticated:  return "Not authenticated"
-            case .incompleteProfile: return "Incomplete profile"
             case .invalidInviteCode: return "Invalid invite code"
             case .userNotFound:      return "User not found after registration"
             case .noFamily:          return "User not found after registration"

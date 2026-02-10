@@ -42,5 +42,9 @@ protocol DataService {
     
     /// Obtiene tareas/recordatorios relacionados con los niños del usuario
     func getCareItems(for userId: UUID) async -> [CareItem]
+    
+    // MARK: - Dashboard Widgets
+    func getWidgetConfigs(for userId: UUID) async throws -> [DashboardWidgetConfig]
+    func saveWidgetConfigs(_ configs: [DashboardWidgetConfig]) async throws
 }
 

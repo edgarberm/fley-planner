@@ -37,33 +37,33 @@ final class AppState {
     
     // MARK: - Session Management
     
-//    @MainActor
-//    func initializeSession() async {
-//        guard let authUserId = SupabaseService.shared.client.auth.currentUser?.id else {
-//            currentRoute = .auth
-//            return
-//        }
-//        
-//        async let user = dataService.getUser(id: authUserId)
-//        async let family = dataService.getFamily(for: authUserId)
-//        
-//        let (loadedUser, loadedFamily) = await (user, family)
-//        
-//        // Routing logic
-//        switch (loadedUser, loadedFamily) {
-//            case (.some(let user), .some(let family)):
-//                self.currentUser = user
-//                self.currentFamily = family
-//                self.currentRoute = .main
-//                
-//            case (.some(let user), .none):
-//                self.currentUser = user
-//                self.currentRoute = .onboarding
-//                
-//            case (.none, _):
-//                self.currentRoute = .onboarding
-//        }
-//    }
+    @MainActor
+    func initializeSession() async {
+        guard let authUserId = SupabaseService.shared.client.auth.currentUser?.id else {
+            currentRoute = .auth
+            return
+        }
+        
+        async let user = dataService.getUser(id: authUserId)
+        async let family = dataService.getFamily(for: authUserId)
+        
+        let (loadedUser, loadedFamily) = await (user, family)
+        
+        // Routing logic
+        switch (loadedUser, loadedFamily) {
+            case (.some(let user), .some(let family)):
+                self.currentUser = user
+                self.currentFamily = family
+                self.currentRoute = .main
+                
+            case (.some(let user), .none):
+                self.currentUser = user
+                self.currentRoute = .onboarding
+                
+            case (.none, _):
+                self.currentRoute = .onboarding
+        }
+    }
     
     // MARK: - Sign In
     
@@ -146,10 +146,6 @@ final class AppState {
             throw AppError.notAuthenticated
         }
         
-        guard !onboarding.name.isEmpty else {
-            throw AppError.incompleteProfile
-        }
-        
         let payload = UserBootstrapPayload(
             id: authUserId,
             name: onboarding.name,
@@ -204,6 +200,16 @@ final class AppState {
         try await dataService.addFamilyMember(memberPayload)
         
         self.currentFamily = family
+            
+        // ✅ Crear widgets por defecto
+        let defaultWidgets = [
+            DashboardWidgetConfig(userId: user.id, kind: .today, size: .wide, position: 0),
+            DashboardWidgetConfig(userId: user.id, kind: .calendar, size: .small, position: 1),
+            DashboardWidgetConfig(userId: user.id, kind: .children, size: .small, position: 2)
+        ]
+        
+        try await dataService.saveWidgetConfigs(defaultWidgets)
+        print("✅ Default widgets created")
     }
     
     @MainActor
@@ -225,75 +231,5 @@ final class AppState {
         
         let family = await dataService.getFamily(for: user.id)
         self.currentFamily = family
-    }
-    
-    // MARK: - Child Management
-    
-    @MainActor
-    func createFirstChild(name: String, relationship: RelationshipType) async throws {
-        guard let user = currentUser else {
-            throw AppError.notAuthenticated
-        }
-        
-        guard let family = currentFamily else {
-            throw AppError.noFamily
-        }
-        
-        print("👶 Creating first child: \(name)")
-        
-        let childId = UUID()
-        
-        // 1. Crear Child
-        let childPayload = CreateChildPayload(
-            id: childId,
-            familyId: family.id,
-            name: name,
-            birthDate: nil,
-            avatarURL: nil,
-            custodyConfig: nil,
-            medicalInfo: nil
-        )
-        
-        let child = try await dataService.createChild(childPayload)
-        print("✅ Child created: \(child.name)")
-        
-        // 2. Crear ChildBond para el usuario actual
-        let bondPayload = CreateChildBondPayload(
-            id: UUID(),
-            childId: childId,
-            userId: user.id,
-            role: .admin,
-            relationship: relationship,
-            permissions: Permissions(
-                canEditCalendar: true,
-                canViewExpenses: true,
-                canAddExpenses: true,
-                canApproveExpenses: true,
-                canViewDocuments: true
-            ),
-            status: .active,
-            expenseContribution: 0.5
-        )
-        
-        let _bond = try await dataService.createChildBond(bondPayload)
-        print("✅ Child bond created for \(user.name)")
-        
-        // 3. Actualizar family.children_ids
-        var updatedFamily = family
-        updatedFamily.childrenIds.append(childId)
-        try await dataService.updateFamily(updatedFamily)
-        print("✅ Family updated with child ID")
-        
-        // 4. ✅ Añadir child a family_members
-        let memberPayload = FamilyMemberInsert(
-            familyId: family.id,
-            userId: childId  // ← El child también es member
-        )
-        try await dataService.addFamilyMember(memberPayload)
-        print("✅ Child added to family_members")
-        
-        self.currentFamily = updatedFamily
-        
-        print("✅ First child creation complete")
     }
 }

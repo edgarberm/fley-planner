@@ -16,14 +16,10 @@ struct WidgetComponent: View {
     
     var body: some View {
         ZStack {
-            switch widget.view {
-                case .view(let view):
-                    view
-                    
-//                case .group(let group):
-//                    WidgetGroupComponent(group: group, widget: widget, width: width, height: height)
-            }
+            // Contenido del widget según su kind
+            widgetContent
             
+            // Borde de agrupación (si aplica)
             RoundedRectangle(cornerRadius: RADIUS, style: .continuous)
                 .stroke(
                     Color.gray.opacity(widget.id == model.widgetTargetForGrouping ? 0.2 : 0),
@@ -36,49 +32,22 @@ struct WidgetComponent: View {
         .cornerRadius(RADIUS)
         .clipped()
     }
-}
-
-
-struct WidgetGroupComponent: View {
-    @Environment(WidgetGridModel.self) var model
     
-    let group: WidgetGroup
-    let widget: Widget
-    let width: CGFloat
-    let height: CGFloat
-    
-    var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            ScrollViewReader { proxy in
-                HStack(spacing: 0) {
-                    ForEach(group.widgets) { w in
-                        WidgetComponent(widget: w, width: width, height: height)
-                            .id(w.id)
-                            .containerRelativeFrame(.horizontal)
-                            .scrollTransition { content, phase in
-                                content
-                                    .scaleEffect(phase.isIdentity ? 1 : 0.8)
-                                    .blur(radius: phase.isIdentity ? 0 : 1.0)
-                            }
-                    }
-                }
-                .onAppear {
-                    if let targetChildID = model.groupScrollPositions[widget.id] ?? group.widgets.first?.id {
-                        DispatchQueue.main.async {
-                            proxy.scrollTo(targetChildID, anchor: .center)
-                        }
-                    }
-                }
-            }
+    @ViewBuilder
+    private var widgetContent: some View {
+        switch widget.kind {
+        case .today:
+            Text("Today")
+                .font(.title2.bold())
+                .foregroundStyle(.secondary)
+        case .calendar:
+            Text("Calendar")
+                .font(.title2.bold())
+                .foregroundStyle(.secondary)
+        case .children:
+            Text("Children")
+                .font(.title2.bold())
+                .foregroundStyle(.secondary)
         }
-        .scrollDisabled(model.isDraggingWidget)
-        .scrollTargetLayout()
-        .scrollTargetBehavior(.paging)
-        .scrollPosition(
-            id: Binding(
-                get: { model.groupScrollPositions[widget.id] ?? group.widgets.first?.id },
-                set: { model.groupScrollPositions[widget.id] = $0 }
-            )
-        )
     }
 }

@@ -28,7 +28,7 @@ final class SupabaseService: DataService {
         )
         return response.user.id
     }
-
+    
     func saveUser(_ user: User) async throws {
         try await client
             .from("users")
@@ -175,7 +175,7 @@ final class SupabaseService: DataService {
             familyId: payload.familyId,
             userId: payload.userId
         )
-
+        
         try await client
             .from("family_members")
             .insert(insert)
@@ -183,7 +183,7 @@ final class SupabaseService: DataService {
         
         print("✅ User joined family")
     }
-
+    
     func addFamilyMember(_ payload: FamilyMemberInsert) async throws {
         try await client
             .from("family_members")
@@ -199,7 +199,7 @@ final class SupabaseService: DataService {
             .update(family)
             .eq("id", value: family.id.uuidString)
             .execute()
-    }   
+    }
     
     // MARK: - Children & Related Data
     
@@ -366,5 +366,50 @@ final class SupabaseService: DataService {
             print("❌ Error fetching care items: \(error)")
             return []
         }
+    }
+    
+    // MARK: - Dashboard Widgets
+    
+    func getWidgetConfigs(for userId: UUID) async throws -> [DashboardWidgetConfig] {
+        let response = try await client
+            .from("dashboard_widgets")
+            .select()
+            .eq("user_id", value: userId.uuidString)
+            .order("position")
+            .execute()
+        
+        // ✅ Configurar decoder para fechas ISO8601
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        
+        let configs = try decoder.decode([DashboardWidgetConfig].self, from: response.data)
+        print("✅ Loaded \(configs.count) widget configs")
+        return configs
+    }
+    
+    func saveWidgetConfigs(_ configs: [DashboardWidgetConfig]) async throws {
+        print("💾 Saving \(configs.count) widget configs...")
+        
+        // Actualizar updatedAt y positions
+        let updatedConfigs = configs.enumerated().map { index, config in
+            var updated = config
+            updated.position = index
+            updated.updatedAt = Date()
+            return updated
+        }
+        
+        // ✅ Configurar encoder para fechas ISO8601
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        
+        //let data = try encoder.encode(updatedConfigs)
+        
+        // Upsert con data pre-encoded
+        try await client
+            .from("dashboard_widgets")
+            .upsert(updatedConfigs)  // Supabase-swift maneja esto automáticamente
+            .execute()
+        
+        print("✅ Widget configs saved")
     }
 }

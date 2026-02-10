@@ -10,9 +10,6 @@ import SwiftUI
 // MARK: - App Root View (Simple)
 
 struct AppRootView: View {
-    @Environment(AppState.self) private var appState
-    @Environment(AppRouter.self) private var router
-    
     var body: some View {
         ZStack {
             DashboardView()
