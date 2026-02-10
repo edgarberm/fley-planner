@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Address: Identifiable, Codable {
+struct Address: Identifiable, Codable, Equatable {
     let id: UUID
     let userId: UUID
     let familyId: UUID

@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct OnboardingNotificationsWidget: View {
+    let onTap: () -> Void
+    
     var body: some View {
         Text("Notifications - TODO")
             .frame(maxWidth: .infinity, maxHeight: .infinity)

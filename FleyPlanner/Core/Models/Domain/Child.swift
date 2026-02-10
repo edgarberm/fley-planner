@@ -11,15 +11,15 @@ struct Child: Identifiable, Codable {
     let id: UUID
     let familyId: UUID  // ✅ AÑADIDO: Necesario para filtrar por familia
     var name: String
-    var birthDate: Date
+    var birthDate: Date?
     var avatarURL: URL?
-    var custodyConfig: CustodyConfiguration
-    var medicalInfo: MedicalInfo
+    var custodyConfig: CustodyConfiguration?
+    var medicalInfo: MedicalInfo?
     // TODO: addresses. From child bond
     
     enum CodingKeys: String, CodingKey {
         case id
-        case familyId = "family_id"  // ✅ AÑADIDO
+        case familyId = "family_id"
         case name
         case birthDate = "birth_date"
         case avatarURL = "avater_url"
@@ -42,6 +42,6 @@ struct Child: Identifiable, Codable {
             return manualCaregiver
         }
         
-        return custodyConfig.getResponsibleAt(date: date)
+        return custodyConfig?.getResponsibleAt(date: date)
     }
 }

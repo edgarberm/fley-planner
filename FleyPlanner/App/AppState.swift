@@ -51,28 +51,31 @@ final class AppState {
         
         // Routing logic
         switch (loadedUser, loadedFamily) {
-        case (.some(let user), .some(let family)):
-            self.currentUser = user
-            self.currentFamily = family
-            self.currentRoute = .main
-            
-        case (.some(let user), .none):
-            self.currentUser = user
-            self.currentRoute = .onboarding
-            
-        case (.none, _):
-            self.currentRoute = .onboarding
+            case (.some(let user), .some(let family)):
+                self.currentUser = user
+                self.currentFamily = family
+                self.currentRoute = .main
+                
+            case (.some(let user), .none):
+                self.currentUser = user
+                self.currentRoute = .onboarding
+                
+            case (.none, _):
+                self.currentRoute = .onboarding
         }
     }
     
     // MARK: - Sign In
-
+    
     @MainActor
     func signInWithApple(credential: ASAuthorizationAppleIDCredential, idToken: String) async throws {
         print("🔐 Starting Apple Sign In...")
         
         // 1. Auth en Supabase
-        let userId = try await dataService.signInWithApple(idToken: idToken, nonce: nil)
+        let userId = try await dataService.signInWithApple(
+            idToken: idToken,
+            nonce: nil
+        )
         print("✅ Authenticated with Supabase. User ID: \(userId)")
         
         // 2. Verificar si el usuario ya existe en nuestra DB
@@ -163,6 +166,11 @@ final class AppState {
         self.currentUser = user
     }
     
+    @MainActor
+    func completeOnboarding() {
+        currentRoute = .main
+    }
+    
     // MARK: - Family Management
     
     @MainActor
@@ -183,7 +191,8 @@ final class AppState {
             subscriptionUserId: user.id,
             subscriptionStatus: .active,
             subscriptionStartDate: Date(),
-            subscriptionExpiresAt: Calendar.current.date(byAdding: .month, value: 1, to: Date())
+            subscriptionExpiresAt: Calendar.current
+                .date(byAdding: .month, value: 1, to: Date())
         )
         
         let family = try await dataService.createFamily(payload)
@@ -218,8 +227,73 @@ final class AppState {
         self.currentFamily = family
     }
     
+    // MARK: - Child Management
+    
     @MainActor
-    func completeOnboarding() {
-        currentRoute = .main
+    func createFirstChild(name: String, relationship: RelationshipType) async throws {
+        guard let user = currentUser else {
+            throw AppError.notAuthenticated
+        }
+        
+        guard let family = currentFamily else {
+            throw AppError.noFamily
+        }
+        
+        print("👶 Creating first child: \(name)")
+        
+        let childId = UUID()
+        
+        // 1. Crear Child
+        let childPayload = CreateChildPayload(
+            id: childId,
+            familyId: family.id,
+            name: name,
+            birthDate: nil,
+            avatarURL: nil,
+            custodyConfig: nil,
+            medicalInfo: nil
+        )
+        
+        let child = try await dataService.createChild(childPayload)
+        print("✅ Child created: \(child.name)")
+        
+        // 2. Crear ChildBond para el usuario actual
+        let bondPayload = CreateChildBondPayload(
+            id: UUID(),
+            childId: childId,
+            userId: user.id,
+            role: .admin,
+            relationship: relationship,
+            permissions: Permissions(
+                canEditCalendar: true,
+                canViewExpenses: true,
+                canAddExpenses: true,
+                canApproveExpenses: true,
+                canViewDocuments: true
+            ),
+            status: .active,
+            expenseContribution: 0.5
+        )
+        
+        let _bond = try await dataService.createChildBond(bondPayload)
+        print("✅ Child bond created for \(user.name)")
+        
+        // 3. Actualizar family.children_ids
+        var updatedFamily = family
+        updatedFamily.childrenIds.append(childId)
+        try await dataService.updateFamily(updatedFamily)
+        print("✅ Family updated with child ID")
+        
+        // 4. ✅ Añadir child a family_members
+        let memberPayload = FamilyMemberInsert(
+            familyId: family.id,
+            userId: childId  // ← El child también es member
+        )
+        try await dataService.addFamilyMember(memberPayload)
+        print("✅ Child added to family_members")
+        
+        self.currentFamily = updatedFamily
+        
+        print("✅ First child creation complete")
     }
 }

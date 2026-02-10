@@ -121,49 +121,74 @@ extension WidgetGridModel {
     }
     
     /// Configura widgets basándose en el estado de onboarding
-    func setupWidgets(context: DashboardContext, user: User, family: Family) {
-        let helper = DashboardOnboardingHelper(
-            context: context,
-            user: user,
-            family: family
-        )
-        
-        if helper.shouldShowOnboardingWidgets {
-            // Mix de widgets de onboarding + normales
-            setupMixedWidgets(helper: helper, context: context)
-        } else {
-            // Solo widgets normales
-            setupNormalWidgets(context: context)
-        }
-    }
-    
-    /// Modo mixto: onboarding + normales
-    private func setupMixedWidgets(helper: DashboardOnboardingHelper, context: DashboardContext) {
-        var allWidgets: [Widget] = []
-        
-        // 1. Widgets de onboarding (prioridad alta)
-        let onboardingKinds = helper.widgetsToShow()
-        
-        // ✨ LOG TEMPORAL
-        print("🎯 Onboarding widgets to show: \(onboardingKinds.map { $0.rawValue })")
-        
-        for kind in onboardingKinds.prefix(3) {
-            allWidgets.append(
-                Widget(
-                    size: kind.defaultSize,
-                    kind: kind,
-                    view: .view(WidgetViewFactory.onboardingView(for: kind))
-                )
+        func setupWidgets(
+            context: DashboardContext,
+            user: User,
+            family: Family,
+            onOpenFlow: @escaping (DashboardView.OnboardingFlow) -> Void  // ✅ Nuevo parámetro
+        ) {
+            let helper = DashboardOnboardingHelper(
+                context: context,
+                user: user,
+                family: family
             )
+            
+            if helper.shouldShowOnboardingWidgets {
+                setupMixedWidgets(
+                    helper: helper,
+                    context: context,
+                    onOpenFlow: onOpenFlow
+                )
+            } else {
+                setupNormalWidgets(context: context)
+            }
         }
         
-        // 2. Widgets normales (si hay datos)
-        if !context.activeChildren.isEmpty {
-            allWidgets.append(contentsOf: createNormalWidgets(context: context))
+        /// Modo mixto: onboarding + normales
+        private func setupMixedWidgets(
+            helper: DashboardOnboardingHelper,
+            context: DashboardContext,
+            onOpenFlow: @escaping (DashboardView.OnboardingFlow) -> Void
+        ) {
+            var allWidgets: [Widget] = []
+            
+            let onboardingKinds = helper.widgetsToShow()
+            print("🎯 Onboarding widgets to show: \(onboardingKinds.map { $0.rawValue })")
+            
+            for kind in onboardingKinds.prefix(3) {
+                allWidgets.append(
+                    Widget(
+                        size: kind.defaultSize,
+                        kind: kind,
+                        view: .view(WidgetViewFactory.onboardingView(
+                            for: kind,
+                            onTap: {
+                                // ✅ Mapear widget kind → flow
+                                let flow: DashboardView.OnboardingFlow? = {
+                                    switch kind {
+                                    case .onboardingCompleteProfile: return .completeProfile
+                                    case .onboardingAddChild: return .addChild
+                                    case .onboardingInvitePartner: return .invitePartner
+                                    case .onboardingChildDetails: return .childDetails
+                                    default: return nil
+                                    }
+                                }()
+                                
+                                if let flow = flow {
+                                    onOpenFlow(flow)
+                                }
+                            }
+                        ))
+                    )
+                )
+            }
+            
+            if !context.activeChildren.isEmpty {
+                allWidgets.append(contentsOf: createNormalWidgets(context: context))
+            }
+            
+            widgets = allWidgets
         }
-        
-        widgets = allWidgets
-    }
     
     /// Solo widgets normales (usuario completo)
     private func setupNormalWidgets(context: DashboardContext) {

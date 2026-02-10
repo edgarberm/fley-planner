@@ -193,6 +193,14 @@ final class SupabaseService: DataService {
         print("✅ Family member added")
     }
     
+    func updateFamily(_ family: Family) async throws {
+        try await client
+            .from("families")
+            .update(family)
+            .eq("id", value: family.id.uuidString)
+            .execute()
+    }   
+    
     // MARK: - Children & Related Data
     
     func getChildren(for familyId: UUID) async -> [Child] {
@@ -213,6 +221,30 @@ final class SupabaseService: DataService {
         }
     }
     
+    func createChild(_ payload: CreateChildPayload) async throws -> Child {
+        print("💾 Creating child: \(payload.name)")
+        // ✅ INSERT sin .select()
+        try await client
+            .from("children")
+            .insert(payload)
+            .execute()
+        
+        print("✅ Child inserted (without select)")
+        
+        // ✅ Construir el Child manualmente desde el payload
+        let child = Child(
+            id: payload.id,
+            familyId: payload.familyId,
+            name: payload.name,
+            birthDate: payload.birthDate ?? Date(),  // Ajusta según tu lógica
+            avatarURL: payload.avatarURL ?? nil,
+            custodyConfig: payload.custodyConfig ?? nil,
+            medicalInfo: payload.medicalInfo ?? nil
+        )
+        
+        return child
+    }
+    
     func getChildBonds(for userId: UUID) async -> [ChildBond] {
         do {
             let bonds: [ChildBond] = try await client
@@ -229,6 +261,32 @@ final class SupabaseService: DataService {
             print("❌ Error fetching child bonds: \(error)")
             return []
         }
+    }
+    
+    func createChildBond(_ payload: CreateChildBondPayload) async throws -> ChildBond {
+        print("💾 Creating child bond for user \(payload.userId)")
+        
+        // ✅ INSERT sin .select()
+        try await client
+            .from("child_bonds")
+            .insert(payload)
+            .execute()
+        
+        print("✅ Child bond inserted (without select)")
+        
+        // ✅ Construir el ChildBond manualmente desde el payload
+        let bond = ChildBond(
+            id: payload.id,
+            childId: payload.childId,
+            userId: payload.userId,
+            role: payload.role,
+            relationship: payload.relationship,
+            permissions: payload.permissions,
+            status: payload.status,
+            expenseContribution: payload.expenseContribution
+        )
+        
+        return bond
     }
     
     func getEvents(for userId: UUID) async -> [CalendarEvent] {

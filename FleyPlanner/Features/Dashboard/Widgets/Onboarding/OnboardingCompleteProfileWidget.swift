@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct OnboardingCompleteProfileWidget: View {
+    let onTap: () -> Void
+    
     var body: some View {
         VStack(spacing: 12) {
             Image(systemName: "person.circle")
@@ -23,6 +25,7 @@ struct OnboardingCompleteProfileWidget: View {
                 .multilineTextAlignment(.center)
             
             Button {
+                onTap()
                 // TODO: Navigate to profile
                 print("🎯 Complete profile tapped")
             } label: {

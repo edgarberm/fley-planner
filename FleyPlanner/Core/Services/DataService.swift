@@ -22,12 +22,17 @@ protocol DataService {
     func createFamily(_ payload: CreateFamilyPayload) async throws -> Family?
     func joinFamily(_ payload: JoinFamilyPayload) async throws
     func addFamilyMember(_ payload: FamilyMemberInsert) async throws
+    func updateFamily(_ family: Family) async throws
     
     // MARK: - Children & Related Data
     func getChildren(for familyId: UUID) async -> [Child]
+    /// Crea un nuevo child en la base de datos
+    func createChild(_ payload: CreateChildPayload) async throws -> Child
     
     /// Obtiene los bonds (relaciones) entre el usuario y los niños
     func getChildBonds(for userId: UUID) async -> [ChildBond]
+    /// Crea un vínculo entre un adulto y un child
+    func createChildBond(_ payload: CreateChildBondPayload) async throws -> ChildBond
 
     /// Obtiene eventos relacionados con los niños del usuario
     func getEvents(for userId: UUID) async -> [CalendarEvent]

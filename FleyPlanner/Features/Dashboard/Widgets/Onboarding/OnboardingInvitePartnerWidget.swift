@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct OnboardingInvitePartnerWidget: View {
-    @State private var showShareSheet = false
+    let onTap: () -> Void
     
     var body: some View {
         VStack(spacing: 12) {
@@ -25,7 +25,7 @@ struct OnboardingInvitePartnerWidget: View {
                 .multilineTextAlignment(.center)
             
             Button {
-                showShareSheet = true
+                onTap()
             } label: {
                 Text("Invite")
                     .font(.subheadline.bold())
@@ -37,9 +37,5 @@ struct OnboardingInvitePartnerWidget: View {
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(.systemBackground))
-        .sheet(isPresented: $showShareSheet) {
-            // TODO: Share sheet con invite code
-            Text("Share invite code - TODO")
-        }
     }
 }

@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct NotificationSettings: Codable {
+struct NotificationSettings: Codable, Equatable {
     var enablePushNotifications: Bool
     var enableEmailNotifications: Bool
     var notifyOnNewEvent: Bool

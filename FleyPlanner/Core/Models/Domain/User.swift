@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct User: Identifiable, Codable {
+struct User: Identifiable, Codable, Equatable {
     let id: UUID
     var name: String
     var email: String? // Opcional para teens
@@ -33,7 +33,7 @@ struct User: Identifiable, Codable {
     }
 }
 
-struct ContactInfo: Identifiable, Codable {
+struct ContactInfo: Identifiable, Codable, Equatable {
     let id: UUID
     var telephone: String
     var addresses: [Address]?

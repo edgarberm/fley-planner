@@ -7,8 +7,8 @@
 
 import Foundation
 
-/// Vínculo de un TEEN con niños de su familia
-/// Los teens NO tienen ChildBonds, solo ChildLinks
+/// Vínculo de un TEEN/CHILD con niños de su familia
+/// Los niños NO tienen ChildBonds, solo ChildLinks
 struct ChildLink: Identifiable, Codable {
     let id: UUID
     let childId: UUID

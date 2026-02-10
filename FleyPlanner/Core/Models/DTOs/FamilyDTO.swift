@@ -18,11 +18,19 @@ struct JoinFamilyPayload {
 }
 
 struct FamilyMemberInsert: Encodable {
+    let id: UUID?
     let familyId: UUID
     let userId: UUID
     
     enum CodingKeys: String, CodingKey {
+        case id
         case familyId = "family_id"
         case userId = "user_id"
+    }
+    
+    init(familyId: UUID, userId: UUID) {
+        self.id = UUID()  // Generar ID automáticamente
+        self.familyId = familyId
+        self.userId = userId
     }
 }

@@ -37,6 +37,39 @@ enum RelationshipType: Codable, Hashable {
         [.mother, .father, .stepParent, .grandparent, .nanny]
     }
     
+    // MARK: - Codable
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+        
+        switch rawValue {
+            case "mother": self = .mother
+            case "father": self = .father
+            case "stepParent": self = .stepParent
+            case "grandparent": self = .grandparent
+            case "nanny": self = .nanny
+            default:
+                // Cualquier otro string se trata como .other
+                self = .other(rawValue)
+        }
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        
+        switch self {
+            case .mother: try container.encode("mother")
+            case .father: try container.encode("father")
+            case .stepParent: try container.encode("stepParent")
+            case .grandparent: try container.encode("grandparent")
+            case .nanny: try container.encode("nanny")
+            case .other(let value): try container.encode(value)
+        }
+    }
+    
+    // MARK: - Equatable & Hashable
+    
     static func == (lhs: RelationshipType, rhs: RelationshipType) -> Bool {
         switch (lhs, rhs) {
             case (.mother, .mother), (.father, .father), (.stepParent, .stepParent),

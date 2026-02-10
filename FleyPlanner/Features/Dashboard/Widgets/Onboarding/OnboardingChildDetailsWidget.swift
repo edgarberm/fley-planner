@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct OnboardingChildDetailsWidget: View {
+    let onTap: () -> Void
+    
     var body: some View {
         Text("Child Details - TODO")
             .frame(maxWidth: .infinity, maxHeight: .infinity)

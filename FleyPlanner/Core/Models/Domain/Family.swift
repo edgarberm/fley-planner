@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Family: Identifiable, Codable {
+struct Family: Identifiable, Codable, Equatable {
     let id: UUID
     var name: String
     var createdBy: UUID
@@ -69,7 +69,3 @@ struct CreateFamilyPayload: Encodable {
         case subscriptionExpiresAt = "subscription_expires_at"
     }
 }
-
-
-
-

@@ -16,10 +16,28 @@ struct ChildBond: Identifiable, Codable {
     var role: Role
     var relationship: RelationshipType
     var permissions: Permissions
-    
+    var status: ChildBondStatus
     var expenseContribution: Decimal {
         didSet {
             expenseContribution = max(0, min(1, expenseContribution))
         }
     }
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case childId = "child_id"
+        case userId = "user_id"
+        case role
+        case relationship
+        case permissions
+        case status
+        case expenseContribution = "expense_contribution"
+    }
+}
+
+enum ChildBondStatus: String, Codable, Hashable {
+    case pending    // Solicitud enviada, pendiente de validación
+    case active     // Vínculo válido y operativo
+    case rejected   // Rechazado explícitamente por un adulto responsable
+    case revoked    // Fue válido, pero se retiró el acceso
 }

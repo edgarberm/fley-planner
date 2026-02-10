@@ -107,19 +107,19 @@ struct EventRow: View {
 // MARK: - Balance widget
 struct BalanceWidgetView: View {
     let balance: UserBalance
-
+    
     var body: some View {
         VStack(alignment: .leading) {
             Text("Balance")
                 .font(.headline)
-
+            
             HStack {
                 VStack(alignment: .leading) {
                     Text("You owe")
                     Text(balance.owed.formatted(.currency(code: "EUR")))
                         .foregroundColor(.red)
                 }
-
+                
                 VStack(alignment: .leading) {
                     Text("Owed to you")
                     Text(balance.owedTo.formatted(.currency(code: "EUR")))
@@ -335,9 +335,13 @@ struct ChildCard: View {
     }
     
     private var ageText: String {
+        if summary.child.birthDate == nil {
+            return "Birth date is not defined"
+        }
+        
         let calendar = Calendar.current
         let now = Date()
-        let components = calendar.dateComponents([.year, .month], from: summary.child.birthDate, to: now)
+        let components = calendar.dateComponents([.year, .month], from: summary.child.birthDate!, to: now)
         
         if let years = components.year, years > 0 {
             return "\(years) year\(years > 1 ? "s" : "") old"

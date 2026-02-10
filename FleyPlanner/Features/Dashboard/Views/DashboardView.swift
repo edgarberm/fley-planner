@@ -14,9 +14,15 @@ struct DashboardView: View {
     @State private var model = WidgetGridModel()
     @State private var loadTask: Task<Void, Never>?
     
-    // Para navegación a pantallas de onboarding
-    @State private var showAddChild = false
-    @State private var showInvitePartner = false
+    // ✅ Estado de navegación centralizado
+    @State private var activeFlow: OnboardingFlow?
+    
+    enum OnboardingFlow {
+        case completeProfile
+        case addChild
+        case invitePartner
+        case childDetails
+    }
     
     var body: some View {
         Group {
@@ -26,7 +32,6 @@ struct DashboardView: View {
                 } else if let error = viewModel.error {
                     errorView(error)
                 } else {
-                    // Siempre mostrar WidgetGrid
                     WidgetGrid()
                         .environment(model)
                 }
@@ -37,19 +42,25 @@ struct DashboardView: View {
                     }
             }
         }
-        .sheet(isPresented: $showAddChild) {
-            // TODO: Tu pantalla de "Añadir niño"
-            Text("Add Child Screen")
+        // ✅ Modal único para todos los flujos
+        .systemTrayView(Binding(
+            get: { activeFlow != nil },
+            set: { if !$0 { activeFlow = nil } }
+        )) {
+            if let flow = activeFlow {
+                flowView(for: flow)
+            }
         }
-        .sheet(isPresented: $showInvitePartner) {
-            // TODO: Tu pantalla de "Invitar co-parent"
-            Text("Invite Partner Screen")
-        }
+        // ✅ Refresh automático cuando cambia user o family
+        .onChange(of: appState.currentUser) { _, _ in refreshDashboard() }
+        .onChange(of: appState.currentFamily) { _, _ in refreshDashboard() }
         .onDisappear {
             loadTask?.cancel()
             loadTask = nil
         }
     }
+    
+    // MARK: - Subviews
     
     private var loadingView: some View {
         VStack(spacing: 16) {
@@ -83,6 +94,22 @@ struct DashboardView: View {
         .padding()
     }
     
+    @ViewBuilder
+    private func flowView(for flow: OnboardingFlow) -> some View {
+        switch flow {
+        case .completeProfile:
+            Text("Profile Flow - TODO")
+        case .addChild:
+            AddChildFlowView()
+        case .invitePartner:
+            Text("Invite Flow - TODO")
+        case .childDetails:
+            Text("Child Details Flow - TODO")
+        }
+    }
+    
+    // MARK: - Dashboard Initialization
+    
     private func initializeDashboard() {
         loadTask?.cancel()
         
@@ -101,34 +128,69 @@ struct DashboardView: View {
                 family: family
             )
             
-            // Asignar viewModel
             viewModel = vm
             
-            // Cargar datos
             do {
                 try await vm.load()
                 
-                // ✨ Configurar widgets usando el nuevo sistema
                 if let context = vm.context {
                     print("✅ Context loaded, setting up widgets...")
-                    model.setupWidgets(context: context, user: user, family: family)
+                    
+                    // ✅ Pasar callback para abrir flujos
+                    model.setupWidgets(
+                        context: context,
+                        user: user,
+                        family: family,
+                        onOpenFlow: { flow in
+                            activeFlow = flow
+                        }
+                    )
+                    
                     print("✅ Widgets setup complete. Total: \(model.widgets.count)")
                 } else {
                     print("⚠️ No context available after load")
                 }
             } catch {
                 print("❌ Dashboard load failed: \(error)")
-                // El error ya está en vm.error, así que la UI lo mostrará
+            }
+        }
+    }
+    
+    // MARK: - Refresh
+    
+    private func refreshDashboard() {
+        Task { @MainActor in
+            guard let user = appState.currentUser,
+                  let family = appState.currentFamily,
+                  let vm = viewModel else { return }
+            
+            print("🔄 Refreshing dashboard...")
+            
+            do {
+                try await vm.load()
+                
+                if let context = vm.context {
+                    model.setupWidgets(
+                        context: context,
+                        user: user,
+                        family: family,
+                        onOpenFlow: { flow in
+                            activeFlow = flow
+                        }
+                    )
+                    print("✅ Dashboard refreshed")
+                }
+            } catch {
+                print("❌ Refresh failed: \(error)")
             }
         }
     }
 }
-
 // MARK: - Preview
 
-#Preview {
-    @Previewable @State var appState = AppState(dataService: SupabaseService.shared)
-    
-    DashboardView()
-        .environment(appState)
-}
+//#Preview {
+//    @Previewable @State var appState = AppState(dataService: SupabaseService.shared)
+//    
+//    DashboardView()
+//        .environment(appState)
+//}
