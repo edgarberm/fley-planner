@@ -305,21 +305,23 @@ struct ChildCard: View {
             }
             
             // Balance for this child
-            if summary.balance.net != 0 {
+            if let balance = summary.balance, balance.net != 0 {
                 Divider()
-                
+
                 HStack {
-                    Image(systemName: summary.balance.net > 0 ? "arrow.up.circle.fill" : "arrow.down.circle.fill")
-                        .foregroundStyle(summary.balance.net > 0 ? .green : .red)
-                    
-                    Text(summary.balance.net > 0 ? "Owed to you" : "You owe")
+                    Image(systemName: balance.net > 0
+                          ? "arrow.up.circle.fill"
+                          : "arrow.down.circle.fill")
+                        .foregroundStyle(balance.net > 0 ? .green : .red)
+
+                    Text(balance.net > 0 ? "Owed to you" : "You owe")
                         .font(.caption)
-                    
+
                     Spacer()
-                    
-                    Text(summary.balance.formattedNet)
+
+                    Text(balance.formattedNet)
                         .font(.subheadline.bold())
-                        .foregroundStyle(summary.balance.net > 0 ? .green : .red)
+                        .foregroundStyle(balance.net > 0 ? .green : .red)
                 }
             }
             

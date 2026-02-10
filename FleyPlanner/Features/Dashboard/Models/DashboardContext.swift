@@ -10,9 +10,10 @@ import Foundation
 struct DashboardContext {
     let currentUser: User
     let activeChildren: [ChildSummary]
+    let allChildren: [Child]
     let pendingExpenses: [Expense]
     let upcomingEvents: [CalendarEvent]
-    let totalBalance: UserBalance
+    let totalBalance: UserBalance?
     
     struct ChildSummary {
         let child: Child
@@ -20,7 +21,7 @@ struct DashboardContext {
         let isWithCurrentUser: Bool
         let nextEvent: CalendarEvent?
         let nextCustodyChange: CustodyChange?
-        let balance: UserBalance
+        let balance: UserBalance?
         let unreviewedExpenses: Int
     }
     
@@ -97,14 +98,17 @@ struct DashboardContext {
         }
         
         // Calcular balance total del usuario
-        let totalBalance = summaries.reduce(
+        let balances = summaries.compactMap(\.balance)
+
+        let totalBalance: UserBalance? = balances.isEmpty ? nil : balances.reduce(
             UserBalance(owed: 0, owedTo: 0)
-        ) { result, summary in
-            UserBalance(
-                owed: result.owed + summary.balance.owed,
-                owedTo: result.owedTo + summary.balance.owedTo
-            )
-        }
+          ) { result, balance in
+              UserBalance(
+                  owed: result.owed + balance.owed,
+                  owedTo: result.owedTo + balance.owedTo
+              )
+          }
+
         
         // Filtrar gastos pendientes del usuario
         let pendingExpenses = expenses.filter { expense in
@@ -121,6 +125,7 @@ struct DashboardContext {
         return DashboardContext(
             currentUser: user,
             activeChildren: summaries,
+            allChildren: children,
             pendingExpenses: pendingExpenses,
             upcomingEvents: upcoming,
             totalBalance: totalBalance
@@ -146,12 +151,16 @@ struct DashboardContext {
         userId: UUID,
         childId: UUID,
         expenses: [Expense]
-    ) -> UserBalance {
+    ) -> UserBalance? {
         
         var owed: Decimal = 0
         var owedTo: Decimal = 0
         
         let childExpenses = expenses.filter { $0.childId == childId }
+        
+        if childExpenses.isEmpty {
+            return nil
+        }
         
         for expense in childExpenses {
             if expense.payerId == userId {

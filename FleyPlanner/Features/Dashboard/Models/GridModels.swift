@@ -121,74 +121,81 @@ extension WidgetGridModel {
     }
     
     /// Configura widgets basándose en el estado de onboarding
-        func setupWidgets(
-            context: DashboardContext,
-            user: User,
-            family: Family,
-            onOpenFlow: @escaping (DashboardView.OnboardingFlow) -> Void  // ✅ Nuevo parámetro
-        ) {
-            let helper = DashboardOnboardingHelper(
+    func setupWidgets(
+        context: DashboardContext,
+        user: User,
+        family: Family,
+        onOpenFlow: @escaping (DashboardView.OnboardingFlow) -> Void  // ✅ Nuevo parámetro
+    ) {
+        let helper = DashboardOnboardingHelper(
+            context: context,
+            user: user,
+            family: family
+        )
+        
+        if helper.shouldShowOnboardingWidgets {
+            setupMixedWidgets(
+                helper: helper,
                 context: context,
-                user: user,
-                family: family
+                onOpenFlow: onOpenFlow
             )
-            
-            if helper.shouldShowOnboardingWidgets {
-                setupMixedWidgets(
-                    helper: helper,
-                    context: context,
-                    onOpenFlow: onOpenFlow
+        } else {
+            setupNormalWidgets(context: context)
+        }
+    }
+    
+    /// Modo mixto: onboarding + normales
+    private func setupMixedWidgets(
+        helper: DashboardOnboardingHelper,
+        context: DashboardContext,
+        onOpenFlow: @escaping (DashboardView.OnboardingFlow) -> Void
+    ) {
+        var allWidgets: [Widget] = []
+        
+        let onboardingKinds = helper.widgetsToShow()
+        print("🎯 Onboarding widgets to show: \(onboardingKinds.map { $0.rawValue })")
+        
+        // 1. Widgets de onboarding (si hay pendientes)
+        for kind in onboardingKinds.prefix(3) {
+            allWidgets.append(
+                Widget(
+                    size: kind.defaultSize,
+                    kind: kind,
+                    view: .view(WidgetViewFactory.onboardingView(
+                        for: kind,
+                        onTap: {
+                            let flow: DashboardView.OnboardingFlow? = {
+                                switch kind {
+                                case .onboardingCompleteProfile: return .completeProfile
+                                case .onboardingAddChild: return .addChild
+                                case .onboardingInvitePartner: return .invitePartner
+                                case .onboardingChildDetails: return .childDetails
+                                default: return nil
+                                }
+                            }()
+                            
+                            if let flow = flow {
+                                onOpenFlow(flow)
+                            }
+                        }
+                    ))
                 )
-            } else {
-                setupNormalWidgets(context: context)
-            }
+            )
         }
         
-        /// Modo mixto: onboarding + normales
-        private func setupMixedWidgets(
-            helper: DashboardOnboardingHelper,
-            context: DashboardContext,
-            onOpenFlow: @escaping (DashboardView.OnboardingFlow) -> Void
-        ) {
-            var allWidgets: [Widget] = []
-            
-            let onboardingKinds = helper.widgetsToShow()
-            print("🎯 Onboarding widgets to show: \(onboardingKinds.map { $0.rawValue })")
-            
-            for kind in onboardingKinds.prefix(3) {
-                allWidgets.append(
-                    Widget(
-                        size: kind.defaultSize,
-                        kind: kind,
-                        view: .view(WidgetViewFactory.onboardingView(
-                            for: kind,
-                            onTap: {
-                                // ✅ Mapear widget kind → flow
-                                let flow: DashboardView.OnboardingFlow? = {
-                                    switch kind {
-                                    case .onboardingCompleteProfile: return .completeProfile
-                                    case .onboardingAddChild: return .addChild
-                                    case .onboardingInvitePartner: return .invitePartner
-                                    case .onboardingChildDetails: return .childDetails
-                                    default: return nil
-                                    }
-                                }()
-                                
-                                if let flow = flow {
-                                    onOpenFlow(flow)
-                                }
-                            }
-                        ))
-                    )
-                )
-            }
-            
-            if !context.activeChildren.isEmpty {
-                allWidgets.append(contentsOf: createNormalWidgets(context: context))
-            }
-            
-            widgets = allWidgets
+        // 2. ✅ CAMBIO: Siempre mostrar widgets normales si hay children en la DB
+        // (incluso si activeChildren está vacío por errores de bonds)
+        let hasAnyChildren = !context.allChildren.isEmpty  // ← Cambio aquí
+        
+        if hasAnyChildren {
+            print("✅ Found \(context.allChildren.count) children, adding normal widgets")
+            allWidgets.append(contentsOf: createNormalWidgets(context: context))
+        } else {
+            print("⚠️ No children found, skipping normal widgets")
         }
+        
+        widgets = allWidgets
+    }
     
     /// Solo widgets normales (usuario completo)
     private func setupNormalWidgets(context: DashboardContext) {
@@ -197,56 +204,75 @@ extension WidgetGridModel {
     
     /// Crea widgets normales con datos reales
     private func createNormalWidgets(context: DashboardContext) -> [Widget] {
-        [
-            Widget(
+        var widgetsToShow: [Widget] = []
+        
+        if context.currentUser.profileCompleted {
+            widgetsToShow.append(Widget(
                 size: .wide,
                 kind: .todaySummary,
                 view: .view(WidgetViewFactory.view(
                     for: Widget(size: .wide, kind: .todaySummary, view: .view(AnyView(EmptyView()))),
                     context: context
                 ))
-            ),
-            Widget(
-                size: .medium,
-                kind: .miniCalendar,
-                view: .view(WidgetViewFactory.view(
-                    for: Widget(size: .medium, kind: .miniCalendar, view: .view(AnyView(EmptyView()))),
-                    context: context
-                ))
-            ),
-            Widget(
-                size: .medium,
-                kind: .balance,
-                view: .view(WidgetViewFactory.view(
-                    for: Widget(size: .medium, kind: .balance, view: .view(AnyView(EmptyView()))),
-                    context: context
-                ))
-            ),
-            Widget(
-                size: .wide,
-                kind: .upcomingEvents,
-                view: .view(WidgetViewFactory.view(
-                    for: Widget(size: .wide, kind: .upcomingEvents, view: .view(AnyView(EmptyView()))),
-                    context: context
-                ))
-            ),
-            Widget(
-                size: .wide,
-                kind: .pendingExpenses,
-                view: .view(WidgetViewFactory.view(
-                    for: Widget(size: .wide, kind: .pendingExpenses, view: .view(AnyView(EmptyView()))),
-                    context: context
-                ))
-            ),
-            Widget(
+            ))
+        }
+        
+        if context.allChildren.count > 0 {
+            // TODO: forEach to create a widget for children
+            widgetsToShow.append(Widget(
                 size: .medium,
                 kind: .childrenStatus,
                 view: .view(WidgetViewFactory.view(
                     for: Widget(size: .medium, kind: .childrenStatus, view: .view(AnyView(EmptyView()))),
                     context: context
                 ))
-            )
-        ]
+            ))
+        }
+        
+        if !context.upcomingEvents.isEmpty {
+            widgetsToShow.append(Widget(
+                size: .medium,
+                kind: .miniCalendar,
+                view: .view(WidgetViewFactory.view(
+                    for: Widget(size: .medium, kind: .miniCalendar, view: .view(AnyView(EmptyView()))),
+                    context: context
+                ))
+            ))
+            
+            widgetsToShow.append(Widget(
+                size: .wide,
+                kind: .upcomingEvents,
+                view: .view(WidgetViewFactory.view(
+                    for: Widget(size: .wide, kind: .upcomingEvents, view: .view(AnyView(EmptyView()))),
+                    context: context
+                ))
+            ))
+        }
+        
+        if context.totalBalance != nil {
+            widgetsToShow.append(Widget(
+                size: .medium,
+                kind: .balance,
+                view: .view(WidgetViewFactory.view(
+                    for: Widget(size: .medium, kind: .balance, view: .view(AnyView(EmptyView()))),
+                    context: context
+                ))
+            ))
+        }
+        
+        if !context.pendingExpenses.isEmpty {
+            widgetsToShow.append(Widget(
+                size: .wide,
+                kind: .pendingExpenses,
+                view: .view(WidgetViewFactory.view(
+                    for: Widget(size: .wide, kind: .pendingExpenses, view: .view(AnyView(EmptyView()))),
+                    context: context
+                ))
+            ))
+        }
+        
+        
+        return widgetsToShow
     }
     
     // DEPRECATED: Eliminar cuando estemos seguros de que no se usa

@@ -46,15 +46,6 @@ struct DashboardOnboardingHelper {
             actions.append(OnboardingAction(type: .invitePartner, priority: 1))
         }
         
-        // 4. Hay niños pero sin detalles completos
-//        let childrenWithoutDetails = context.activeChildren.filter { summary in
-//            summary.child.medicalInfo?.bloodType == nil ||
-//            summary.child.medicalInfo?.emergencyContacts.isEmpty
-//        }
-//        if !childrenWithoutDetails.isEmpty {
-//            actions.append(OnboardingAction(type: .addChildDetails, priority: 2))
-//        }
-        
         // Ordenar por prioridad
         return actions.sorted { $0.priority < $1.priority }
     }

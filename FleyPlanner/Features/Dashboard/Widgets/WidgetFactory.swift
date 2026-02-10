@@ -12,7 +12,7 @@ struct WidgetViewFactory {
     static func view(for widget: Widget, context: DashboardContext) -> AnyView {
         switch widget.kind {
         case .balance:
-            return AnyView(BalanceWidgetView(balance: context.totalBalance))
+            return AnyView(BalanceWidgetView(balance: context.totalBalance!))
         case .miniCalendar:
             return AnyView(Text("Mini Calendar"))
         case .upcomingEvents:

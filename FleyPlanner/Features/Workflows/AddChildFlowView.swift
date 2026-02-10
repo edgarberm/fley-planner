@@ -26,15 +26,15 @@ struct AddChildFlowView: View {
                 Text("Add your first child")
                     .font(.title2.bold())
                 
-                Spacer()
-                
-                Button {
-                    dismiss()
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.title2)
-                        .foregroundStyle(.gray, .gray.opacity(0.2))
-                }
+//                Spacer()
+//                
+//                Button {
+//                    dismiss()
+//                } label: {
+//                    Image(systemName: "xmark.circle.fill")
+//                        .font(.title2)
+//                        .foregroundStyle(.gray, .gray.opacity(0.2))
+//                }
             }
             
             // Form
@@ -101,8 +101,6 @@ struct AddChildFlowView: View {
                     .multilineTextAlignment(.center)
             }
             
-            Spacer()
-            
             // Submit button
             Button {
                 Task { await createChild() }
@@ -147,6 +145,7 @@ struct AddChildFlowView: View {
                 relationship: finalRelationship
             )
             
+            try? await Task.sleep(nanoseconds: 1_000_000_000)
             dismiss()
             
         } catch let appErr as AppError {
