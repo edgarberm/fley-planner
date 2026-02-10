@@ -10,13 +10,4 @@ import Observation
 
 @Observable
 final class AppRouter {
-    var showSettings: Bool = false
-    
-    func openSettings() {
-        showSettings = true
-    }
-    
-    func closeSettings() {
-        showSettings = false
-    }
 }
