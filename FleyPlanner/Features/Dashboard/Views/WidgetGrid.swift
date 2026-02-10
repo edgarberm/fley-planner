@@ -10,6 +10,8 @@ import SwiftUI
 struct WidgetGrid: View {
     @Environment(WidgetGridModel.self) var model
     
+    let onWidgetTap: (Widget) -> Void
+    
     @State private var widgets: [Widget] = []
     @State private var hapticsTrigger: Bool = false
     @State private var shadowRadius: CGFloat = 0
@@ -36,7 +38,10 @@ struct WidgetGrid: View {
                             WidgetComponent(
                                 widget: widget,
                                 width: position.width,
-                                height: position.height
+                                height: position.height,
+                                onTap: {
+                                    onWidgetTap(widget)
+                                }
                             )
                             .position(
                                 x: position.midX,

@@ -13,6 +13,19 @@ struct WidgetComponent: View {
     let widget: Widget
     let width: CGFloat
     let height: CGFloat
+    let onTap: () -> Void
+    
+    init(
+        widget: Widget,
+        width: CGFloat,
+        height: CGFloat,
+        onTap: @escaping () -> Void = {}
+    ) {
+        self.widget = widget
+        self.width = width
+        self.height = height
+        self.onTap = onTap
+    }
     
     var body: some View {
         ZStack {
@@ -31,6 +44,9 @@ struct WidgetComponent: View {
         .background(Color.white)
         .cornerRadius(RADIUS)
         .clipped()
+        .onTapGesture {
+            onTap()
+        }
     }
     
     @ViewBuilder

@@ -11,18 +11,49 @@ struct DashboardView: View {
     @Environment(AppState.self) private var appState
     @State private var model = WidgetGridModel()
     @State private var isLoading = true
+    @State private var activeRoute: DashboardRoute?
     
     var body: some View {
         Group {
             if isLoading {
                 ProgressView("Loading dashboard...")
             } else {
-                WidgetGrid()
-                    .environment(model)
+                WidgetGrid(onWidgetTap: { widget in
+                    activeRoute = .widgetDetail(widget)
+                })
+                .environment(model)
             }
+        }
+        .fullScreenSheet(
+            ignoreSafeArea: true,
+            isPresented: Binding(
+                get: { activeRoute != .none },
+                set: { isPresented in
+                    if !isPresented {
+                        activeRoute = .none
+                    }
+                }
+            )
+        ) { safeArea in
+            routeView(for: activeRoute!)
+                .safeAreaPadding(.top, safeArea.top)
+        } background: {
+            defaultBackground()
         }
         .task {
             await loadWidgets()
+        }
+    }
+    
+    @ViewBuilder
+    private func routeView(for route: DashboardRoute) -> some View {
+        switch route {
+            case .widgetDetail(let widget):
+                WidgetDetailRouter(widget: widget)
+            case .settings:
+                Text("Settings - TODO")
+            case .addWidget:
+                Text("Add Widget - TODO")
         }
     }
     
