@@ -52,9 +52,7 @@ final class OnboardingState {
         accountType = .adult
         route = .welcome
     }
-}
-
-extension OnboardingState {
+    
     var nameBinding: Binding<String> {
         Binding(
             get: { self.name },

@@ -37,33 +37,33 @@ final class AppState {
     
     // MARK: - Session Management
     
-    @MainActor
-    func initializeSession() async {
-        guard let authUserId = SupabaseService.shared.client.auth.currentUser?.id else {
-            currentRoute = .auth
-            return
-        }
-        
-        async let user = dataService.getUser(id: authUserId)
-        async let family = dataService.getFamily(for: authUserId)
-        
-        let (loadedUser, loadedFamily) = await (user, family)
-        
-        // Routing logic
-        switch (loadedUser, loadedFamily) {
-            case (.some(let user), .some(let family)):
-                self.currentUser = user
-                self.currentFamily = family
-                self.currentRoute = .main
-                
-            case (.some(let user), .none):
-                self.currentUser = user
-                self.currentRoute = .onboarding
-                
-            case (.none, _):
-                self.currentRoute = .onboarding
-        }
-    }
+//    @MainActor
+//    func initializeSession() async {
+//        guard let authUserId = SupabaseService.shared.client.auth.currentUser?.id else {
+//            currentRoute = .auth
+//            return
+//        }
+//        
+//        async let user = dataService.getUser(id: authUserId)
+//        async let family = dataService.getFamily(for: authUserId)
+//        
+//        let (loadedUser, loadedFamily) = await (user, family)
+//        
+//        // Routing logic
+//        switch (loadedUser, loadedFamily) {
+//            case (.some(let user), .some(let family)):
+//                self.currentUser = user
+//                self.currentFamily = family
+//                self.currentRoute = .main
+//                
+//            case (.some(let user), .none):
+//                self.currentUser = user
+//                self.currentRoute = .onboarding
+//                
+//            case (.none, _):
+//                self.currentRoute = .onboarding
+//        }
+//    }
     
     // MARK: - Sign In
     

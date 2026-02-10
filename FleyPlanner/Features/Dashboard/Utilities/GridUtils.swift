@@ -41,7 +41,7 @@ func calculateAbsolutePositions(in geometry: GeometryProxy, widgets: [Widget]) -
             positions[widget.id] = leftRect
             
             // Verificar si hay un segundo widget medium
-            if i + 1 < widgets.count && widgets[i + 1].size == .medium {
+            if i + 1 < widgets.count && widgets[i + 1].size == .small {
                 let rightWidget = widgets[i + 1]
                 let rightRect = CGRect(
                     x: SPACING + mediumWidth + SPACING,
@@ -128,7 +128,7 @@ func reorderedWidgetsIfNeeded(
     }
     
     // 🔁 medium vs medium
-    if dragged.size == .medium && target.size == .medium {
+    if dragged.size == .small && target.size == .small {
         tempWidgets.swapAt(currentIndex, targetIndex)
         let repacked = compactWidgets(tempWidgets)
         return (repacked.map(\.id) != widgets.map(\.id) ? repacked : nil, possibleGroupingTarget)
@@ -158,7 +158,7 @@ func compactWidgets(_ widgets: [Widget]) -> [Widget] {
         if first.size == .wide {
             result.append(first)
         } else {
-            if let secondIndex = queue.firstIndex(where: { $0.size == .medium }) {
+            if let secondIndex = queue.firstIndex(where: { $0.size == .small }) {
                 let second = queue.remove(at: secondIndex)
                 result.append(first)
                 result.append(second)
@@ -180,7 +180,7 @@ func groupWidgetsIntoRows(_ widgets: [Widget]) -> [[Widget]] {
         if first.size == .wide {
             rows.append([first])
         } else {
-            if let secondIndex = queue.firstIndex(where: { $0.size == .medium }) {
+            if let secondIndex = queue.firstIndex(where: { $0.size == .small }) {
                 let second = queue.remove(at: secondIndex)
                 rows.append([first, second])
             } else {

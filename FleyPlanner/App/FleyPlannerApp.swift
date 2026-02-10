@@ -18,9 +18,6 @@ struct FleyPlannerApp: App {
                 .environment(appState)
                 .environment(router)
                 .preferredColorScheme(.light)
-                .task {
-                    await appState.initializeSession()
-                }
         }
     }
 }
