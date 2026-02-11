@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct GridTools: View {
+    let onOpenSettings: () -> Void
+    
     @Environment(WidgetGridModel.self) var model
     
     var body: some View {
@@ -15,7 +17,7 @@ struct GridTools: View {
             HStack {
                 Spacer()
                 Button(action: {
-                    print("Left tapped")
+                    onOpenSettings()
                 }) {
                     Image("settings-2")
                         .resizable()
@@ -32,5 +34,5 @@ struct GridTools: View {
 }
 
 #Preview {
-    GridTools()
+    GridTools(onOpenSettings: { print("Open settings") })
 }

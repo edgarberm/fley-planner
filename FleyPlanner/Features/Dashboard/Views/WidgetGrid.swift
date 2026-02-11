@@ -11,6 +11,7 @@ struct WidgetGrid: View {
     @Environment(WidgetGridModel.self) var model
     
     let onWidgetTap: (Widget) -> Void
+    let onOpenSettings: () -> Void
     
     @State private var widgets: [Widget] = []
     @State private var hapticsTrigger: Bool = false
@@ -26,7 +27,7 @@ struct WidgetGrid: View {
             let totalHeight = (positions.values.map { $0.maxY }.max() ?? 0) + 74
             
             ScrollView(showsIndicators: false) {
-                GridTools()
+                GridTools(onOpenSettings: onOpenSettings)
                 
                 ZStack {
                     Rectangle()

@@ -11,16 +11,21 @@ struct DashboardView: View {
     @Environment(AppState.self) private var appState
     @State private var model = WidgetGridModel()
     @State private var isLoading = true
-    @State private var activeRoute: DashboardRoute?
+    @State private var activeRoute: DashboardRouter?
     
     var body: some View {
         Group {
             if isLoading {
                 ProgressView("Loading dashboard...")
             } else {
-                WidgetGrid(onWidgetTap: { widget in
-                    activeRoute = .widgetDetail(widget)
-                })
+                WidgetGrid(
+                    onWidgetTap: { widget in
+                        activeRoute = .widgetDetail(widget)
+                    },
+                    onOpenSettings: {
+                        activeRoute = .settings
+                    }
+                )
                 .environment(model)
             }
         }
@@ -46,7 +51,7 @@ struct DashboardView: View {
     }
     
     @ViewBuilder
-    private func routeView(for route: DashboardRoute) -> some View {
+    private func routeView(for route: DashboardRouter) -> some View {
         switch route {
             case .widgetDetail(let widget):
                 WidgetDetailRouter(widget: widget)

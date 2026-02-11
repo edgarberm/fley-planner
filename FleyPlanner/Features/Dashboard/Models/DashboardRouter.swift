@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum DashboardRoute: Identifiable, Hashable {
+enum DashboardRouter: Identifiable, Hashable {
     case widgetDetail(Widget)
     case settings
     case addWidget
@@ -29,7 +29,7 @@ enum DashboardRoute: Identifiable, Hashable {
         hasher.combine(id)
     }
     
-    static func == (lhs: DashboardRoute, rhs: DashboardRoute) -> Bool {
+    static func == (lhs: DashboardRouter, rhs: DashboardRouter) -> Bool {
         lhs.id == rhs.id
     }
 }
