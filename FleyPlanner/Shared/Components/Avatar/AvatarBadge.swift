@@ -8,11 +8,20 @@
 import SwiftUI
 
 struct AvatarBadge: View {
-    var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+    var avatarSizing: AvatarSize
+    var state: AvatarState
+    
+    public var body: some View {
+        Circle()
+            .fill(state.bgColor)
+            .frame(width: avatarSizing.badgeSize, height: avatarSizing.badgeSize)
+            .overlay {
+                Circle()
+                    .stroke(.white, lineWidth: 2)
+            }
     }
 }
 
 #Preview {
-    AvatarBadge()
+    AvatarBadge(avatarSizing: .lg, state: .offline)
 }
