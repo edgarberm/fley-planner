@@ -31,9 +31,20 @@ struct DetailView: View {
     
     var body: some View {
         ZStack(alignment: .topLeading) {
-            // Tu contenido
-            Text("You are into \(value)")
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            ScrollView {
+                // Tu contenido
+                Text("You are into \(value)")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                
+                Avatar(type: .image(image: URL(string: "https://i.pravatar.cc/100")!), size: .profile, state: .normal)
+            
+                ForEach(0..<50) { index in
+                        Text("Item \(index + 1)")
+                }
+                
+                Spacer()
+            }
+            .background(Color(UIColor.secondarySystemBackground))
             
             // Botón flotante
             Button {
@@ -44,15 +55,18 @@ struct DetailView: View {
                     .foregroundStyle(.black)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 8)
-                    .background(Color(UIColor.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .background(
+                        .black.opacity(0.1),
+                        in: RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    )
             }
-            .padding(.leading, 16)
-            .padding(.top, 8)
+            .zIndex(.ulpOfOne)
+            .padding(.leading, 26)
+            .padding(.top, -46)
         }
-        .navigationBarBackButtonHidden(true)
         .navigationTitle("My Profile")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar(.hidden, for: .navigationBar)
+        .navigationBarBackButtonHidden(true)
         .background {
             SwipeBackEnabler()
         }
