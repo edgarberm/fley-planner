@@ -5,11 +5,29 @@
 //  Created by Edgar Bermejo on 5/2/26.
 //
 
+//        .fullScreenSheet(
+//            ignoreSafeArea: true,
+//            isPresented: Binding(
+//                get: { activeRoute != .none },
+//                set: { isPresented in
+//                    if !isPresented {
+//                        activeRoute = .none
+//                    }
+//                }
+//            )
+//        ) { safeArea in
+//            routeView(for: activeRoute!)
+//                .scrollContentBackground(.hidden)
+//                .safeAreaPadding(.top, safeArea.top)
+//        } background: {
+//            fullScreenSheetBackground()
+//        }
+
 import SwiftUI
 
 extension View {
     @ViewBuilder
-    func defaultBackground() -> some View {
+    func fullScreenSheetBackground() -> some View {
         RoundedRectangle(cornerRadius: displayCornerRadius())
             .fill(.thinMaterial)
     }

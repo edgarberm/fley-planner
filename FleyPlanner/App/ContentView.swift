@@ -14,7 +14,7 @@ struct ContentView: View {
         ZStack {
             switch appState.currentRoute {
                 case .splash:
-                    ProgressView() // Splash Screen chula
+                    ProgressView() // TODO: Splash Screen chula
                 case .auth:
                     SignInView()
                 case .onboarding:
@@ -24,8 +24,5 @@ struct ContentView: View {
             }
         }
         .animation(.spring(), value: appState.currentRoute)
-        .onAppear {
-            print("Init ContentView: \(appState.currentRoute)")
-        }
     }
 }

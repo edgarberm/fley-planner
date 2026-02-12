@@ -11,7 +11,7 @@ struct TodayDetailView: View {
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
-        NavigationStack {
+        ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: 20) {
                 Image(systemName: "sun.max.fill")
                     .font(.system(size: 80))

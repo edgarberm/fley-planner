@@ -11,7 +11,7 @@ struct ChildrenDetailView: View {
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
-        NavigationStack {
+        ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: 20) {
                 Image(systemName: "person.2.fill")
                     .font(.system(size: 80))

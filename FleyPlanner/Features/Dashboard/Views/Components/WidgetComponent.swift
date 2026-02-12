@@ -55,15 +55,15 @@ struct WidgetComponent: View {
         case .today:
             Text("Today")
                 .font(.title2.bold())
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.blue)
         case .calendar:
             Text("Calendar")
                 .font(.title2.bold())
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.red)
         case .children:
             Text("Children")
                 .font(.title2.bold())
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.green)
         }
     }
 }

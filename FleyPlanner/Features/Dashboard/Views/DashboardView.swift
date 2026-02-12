@@ -29,21 +29,20 @@ struct DashboardView: View {
                 .environment(model)
             }
         }
-        .fullScreenSheet(
-            ignoreSafeArea: true,
-            isPresented: Binding(
-                get: { activeRoute != .none },
-                set: { isPresented in
-                    if !isPresented {
-                        activeRoute = .none
-                    }
+        .sheet(isPresented: Binding(
+            get: { activeRoute != .none },
+            set: { isPresented in
+                if !isPresented {
+                    activeRoute = .none
                 }
-            )
-        ) { safeArea in
+            }
+        )) {
             routeView(for: activeRoute!)
-                .safeAreaPadding(.top, safeArea.top)
-        } background: {
-            defaultBackground()
+                .presentationDetents([.fraction(0.999)])
+                //.presentationDragIndicator(.visible)
+                .presentationCornerRadius(displayCornerRadius() / 1.2)
+                .presentationBackground(Color(UIColor.secondarySystemBackground))
+                .presentationBackgroundInteraction(.disabled)
         }
         .task {
             await loadWidgets()
@@ -56,7 +55,9 @@ struct DashboardView: View {
             case .widgetDetail(let widget):
                 WidgetDetailRouter(widget: widget)
             case .settings:
-                Text("Settings - TODO")
+                NavigationStack {
+                    SettingsView()
+                }
             case .addWidget:
                 Text("Add Widget - TODO")
         }
@@ -100,3 +101,4 @@ struct DashboardView: View {
 //    DashboardView()
 //        .environment(appState)
 //}
+
