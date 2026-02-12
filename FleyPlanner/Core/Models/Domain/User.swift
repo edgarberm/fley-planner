@@ -25,23 +25,11 @@ struct User: Identifiable, Codable, Equatable {
         case email
         case appleId = "apple_id"
         case accountType = "account_type"
-        case avatarURL = "avater_url"
+        case avatarURL = "avatar_url"
         case isPremium = "is_premium"
         case contactInfo = "contact_info"
         case notificationSettings = "notification_settings"
         case profileCompleted = "profile_completed"
-    }
-}
-
-struct ContactInfo: Identifiable, Codable, Equatable {
-    let id: UUID
-    var telephone: String
-    var addresses: [Address]?
-    
-    enum CodingKeys: String, CodingKey {
-        case id
-        case telephone
-        case addresses
     }
 }
 
@@ -56,5 +44,21 @@ struct UserBootstrapPayload: Encodable {
         case name
         case appleId = "apple_id"
         case accountType = "account_type"
+    }
+}
+
+// MARK: - helpers
+
+extension User {
+    var hasContactInfo: Bool {
+        !(contactInfo?.isEmpty ?? true)
+    }
+    
+    var primaryPhone: String? {
+        contactInfo?.primaryPhone?.number
+    }
+    
+    var primaryAddress: String? {
+        contactInfo?.primaryAddress?.formattedAddress
     }
 }
