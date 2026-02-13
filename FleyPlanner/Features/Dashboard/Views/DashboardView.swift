@@ -39,9 +39,7 @@ struct DashboardView: View {
         )) {
             routeView(for: activeRoute!)
                 .presentationDetents([.fraction(0.999)])
-                //.presentationDragIndicator(.visible)
-                .presentationCornerRadius(displayCornerRadius() / 1.2)
-                .presentationBackground(Color(UIColor.secondarySystemBackground))
+                .presentationCornerRadius(displayCornerRadius() / 1.5)
                 .presentationBackgroundInteraction(.disabled)
         }
         .task {
