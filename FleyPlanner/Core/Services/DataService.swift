@@ -35,7 +35,7 @@ protocol DataService {
     func createChildBond(_ payload: CreateChildBondPayload) async throws -> ChildBond
 
     /// Obtiene eventos relacionados con los niños del usuario
-    func getEvents(for userId: UUID) async -> [CalendarEvent]
+    func getEvents(for userId: UUID) async -> [Activity]
     
     /// Obtiene gastos relacionados con los niños del usuario
     func getExpenses(for userId: UUID) async -> [Expense]

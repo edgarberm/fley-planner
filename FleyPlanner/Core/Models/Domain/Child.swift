@@ -27,23 +27,24 @@ struct Child: Identifiable, Codable {
         case medicalInfo = "medical_info"
     }
     
-    func whoIsResponsible(at date: Date, events: [CalendarEvent]) -> UUID? {
-        let activeEvent = events
-            .filter { event in
-                event.childId == self.id &&
-                event.assignedCaregiverId != nil &&
-                date >= event.startDate &&
-                date <= event.endDate
-            }
-            .sorted { $0.startDate > $1.startDate }
-            .first
-        
-        if let manualCaregiver = activeEvent?.assignedCaregiverId {
-            return manualCaregiver
-        }
-        
-        return custodyConfig?.getResponsibleAt(date: date)
-    }
+    // TODO: implementar correctamente
+//    func whoIsResponsible(at date: Date, events: [Activity]) -> UUID? {
+//        let activeEvent = events
+//            .filter { event in
+//                event.childId == self.id &&
+//                event.assignedCaregiverId != nil &&
+//                date >= event.startDate &&
+//                date <= event.endDate
+//            }
+//            .sorted { $0.startDate > $1.startDate }
+//            .first
+//        
+//        if let manualCaregiver = activeEvent?.assignedCaregiverId {
+//            return manualCaregiver
+//        }
+//        
+//        return custodyConfig?.getResponsibleAt(date: date)
+//    }
 }
 
 struct CreateChildPayload: Encodable {

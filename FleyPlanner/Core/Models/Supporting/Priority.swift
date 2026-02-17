@@ -8,10 +8,10 @@
 import Foundation
 
 enum Priority: String, Codable {
-    case low = "Baja"
+    case low = "Low"
     case normal = "Normal"
-    case high = "Alta"
-    case urgent = "Urgente"
+    case high = "High"
+    case urgent = "Urgent"
     
     var color: String {
         switch self {

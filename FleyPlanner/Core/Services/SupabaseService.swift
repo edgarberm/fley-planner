@@ -289,7 +289,7 @@ final class SupabaseService: DataService {
         return bond
     }
     
-    func getEvents(for userId: UUID) async -> [CalendarEvent] {
+    func getEvents(for userId: UUID) async -> [Activity] {
         do {
             // Primero obtenemos los bonds para saber qué children tiene el usuario
             let bonds = await getChildBonds(for: userId)
@@ -300,7 +300,7 @@ final class SupabaseService: DataService {
                 return []
             }
             
-            let events: [CalendarEvent] = try await client
+            let events: [Activity] = try await client
                 .from("events")
                 .select()
                 .in("child_id", values: childIds)
