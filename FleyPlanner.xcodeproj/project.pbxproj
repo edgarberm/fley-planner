@@ -19,9 +19,22 @@
 		6D25AABF2F2C971600039D76 /* FleyPlanner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FleyPlanner.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		6DFD572C2F44E616002ACA4C /* Exceptions for "FleyPlanner" folder in "FleyPlanner" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 6D25AABE2F2C971600039D76 /* FleyPlanner */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		6D25AAC12F2C971600039D76 /* FleyPlanner */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				6DFD572C2F44E616002ACA4C /* Exceptions for "FleyPlanner" folder in "FleyPlanner" target */,
+			);
 			path = FleyPlanner;
 			sourceTree = "<group>";
 		};
@@ -290,8 +303,10 @@
 				DEVELOPMENT_ASSET_PATHS = "\"FleyPlanner/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FleyPlanner/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Fley Planner";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Take a photo";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -326,8 +341,10 @@
 				DEVELOPMENT_ASSET_PATHS = "\"FleyPlanner/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FleyPlanner/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Fley Planner";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Take a photo";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
